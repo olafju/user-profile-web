@@ -1,0 +1,16 @@
+.read-only-field {
+  display: grid;
+  gap: 4px;
+}
+
+.read-only-field__label {
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.read-only-field__value {
+  overflow-wrap: anywhere;
+  color: var(--text-h);
+}

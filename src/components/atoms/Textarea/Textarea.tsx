@@ -7,6 +7,8 @@ type TextareaProps = {
   placeholder?: string;
   disabled?: boolean;
   rows?: number;
+  ariaDescribedBy?: string;
+  invalid?: boolean;
   onChange: (value: string) => void;
 };
 
@@ -16,6 +18,8 @@ function Textarea({
   placeholder,
   disabled,
   rows = 5,
+  ariaDescribedBy,
+  invalid,
   onChange,
 }: TextareaProps) {
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -30,6 +34,8 @@ function Textarea({
       placeholder={placeholder}
       disabled={disabled}
       rows={rows}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={invalid}
       onChange={handleChange}
     />
   );

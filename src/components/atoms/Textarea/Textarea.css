@@ -23,6 +23,10 @@
   box-shadow: 0 0 0 3px var(--accent-bg);
 }
 
+.textarea[aria-invalid='true'] {
+  border-color: #d92d20;
+}
+
 .textarea:disabled {
   cursor: not-allowed;
   opacity: 0.6;
