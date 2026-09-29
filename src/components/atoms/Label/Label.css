@@ -1,0 +1,7 @@
+.label {
+  display: inline-block;
+  color: var(--text-h);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
