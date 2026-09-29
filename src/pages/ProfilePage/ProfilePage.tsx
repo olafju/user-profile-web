@@ -1,5 +1,4 @@
-import Button from '../../components/atoms/Button/Button';
-import './ProfilePage.css';
+import ProfileTemplate from '../../components/templates/ProfileTemplate/ProfileTemplate';
 
 type ProfilePageProps = {
   onLogout: () => void;
@@ -7,13 +6,9 @@ type ProfilePageProps = {
 
 function ProfilePage({ onLogout }: ProfilePageProps) {
   return (
-    <main className="profile-page">
-      <section className="profile-page__content">
-        <h1>Profile</h1>
-        <p>The profile interface will be added in the next stage.</p>
-        <Button onClick={onLogout}>Log out</Button>
-      </section>
-    </main>
+    <ProfileTemplate title="Profile" onLogout={onLogout}>
+      <p>The profile form will be connected in the next stage.</p>
+    </ProfileTemplate>
   );
 }
 
