@@ -12,8 +12,8 @@ type ProfileFormProps = {
   profile: UserProfile;
   isSaving?: boolean;
   isRefreshing?: boolean;
-  saveError?: string;
-  saveSuccess?: string;
+  errorMessage?: string;
+  successMessage?: string;
   onChange: (profile: ProfileUpdate) => void;
   onSave: () => void;
   onRefresh: () => void;
@@ -23,8 +23,8 @@ function ProfileForm({
   profile,
   isSaving = false,
   isRefreshing = false,
-  saveError,
-  saveSuccess,
+  errorMessage,
+  successMessage,
   onChange,
   onSave,
   onRefresh,
@@ -73,10 +73,10 @@ function ProfileForm({
         onChange={handleBioChange}
       />
 
-      {saveError ? (
-        <Message variant="error">{saveError}</Message>
-      ) : saveSuccess ? (
-        <Message variant="success">{saveSuccess}</Message>
+      {errorMessage ? (
+        <Message variant="error">{errorMessage}</Message>
+      ) : successMessage ? (
+        <Message variant="success">{successMessage}</Message>
       ) : null}
 
       <div className="profile-form__actions">

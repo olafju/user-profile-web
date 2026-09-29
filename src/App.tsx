@@ -1,4 +1,5 @@
 import type { LoginCredentials } from './types/auth';
+import type { ProfileUpdate, UserProfile } from './types/profile';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage/LoginPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
@@ -12,12 +13,34 @@ const wait = (delay: number) => {
   });
 };
 
+let mockProfile: UserProfile = {
+  id: 'user-001',
+  email: 'user@example.com',
+  displayName: 'Demo User',
+  bio: 'This profile currently uses controlled mock data.',
+};
+
 const mockLogin = async (credentials: LoginCredentials) => {
   await wait(800);
 
   if (credentials.password === 'wrong-password') {
     throw new Error('Invalid email or password.');
   }
+
+  mockProfile = { ...mockProfile, email: credentials.email };
+};
+
+const mockSaveProfile = async (changes: ProfileUpdate) => {
+  await wait(700);
+  mockProfile = { ...mockProfile, ...changes };
+
+  return { ...mockProfile };
+};
+
+const mockRefreshProfile = async () => {
+  await wait(500);
+
+  return { ...mockProfile };
 };
 
 function App() {
@@ -42,7 +65,12 @@ function App() {
         path="/profile"
         element={
           <ProtectedRoute>
-            <ProfilePage onLogout={endSession} />
+            <ProfilePage
+              initialProfile={{ ...mockProfile }}
+              saveProfile={mockSaveProfile}
+              refreshProfile={mockRefreshProfile}
+              onLogout={endSession}
+            />
           </ProtectedRoute>
         }
       />
