@@ -1,7 +1,9 @@
 import type { LoginCredentials } from './types/auth';
-import Button from './components/atoms/Button/Button';
-import AuthTemplate from './components/templates/AuthTemplate/AuthTemplate';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage/LoginPage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import ProtectedRoute from './routing/ProtectedRoute';
+import PublicOnlyRoute from './routing/PublicOnlyRoute';
 import useSession from './session/useSession';
 
 const wait = (delay: number) => {
@@ -26,18 +28,35 @@ function App() {
     startSession('mock-access-token');
   };
 
-  if (isAuthenticated) {
-    return (
-      <AuthTemplate
-        title="Session active"
-        description="This in-memory session ends when you refresh the page."
-      >
-        <Button onClick={endSession}>Log out</Button>
-      </AuthTemplate>
-    );
-  }
-
-  return <LoginPage login={handleLogin} />;
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          <PublicOnlyRoute>
+            <LoginPage login={handleLogin} />
+          </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage onLogout={endSession} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <Navigate
+            to={isAuthenticated ? '/profile' : '/login'}
+            replace
+          />
+        }
+      />
+    </Routes>
+  );
 }
 
 export default App;
