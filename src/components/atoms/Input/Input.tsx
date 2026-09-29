@@ -7,6 +7,8 @@ type InputProps = {
   value: string;
   placeholder?: string;
   disabled?: boolean;
+  ariaDescribedBy?: string;
+  invalid?: boolean;
   onChange: (value: string) => void;
 };
 
@@ -16,6 +18,8 @@ function Input({
   value,
   placeholder,
   disabled,
+  ariaDescribedBy,
+  invalid,
   onChange,
 }: InputProps) {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -30,6 +34,8 @@ function Input({
       value={value}
       placeholder={placeholder}
       disabled={disabled}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={invalid}
       onChange={handleChange}
     />
   );

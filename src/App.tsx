@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import Button from './components/atoms/Button/Button';
-import Input from './components/atoms/Input/Input';
 import Label from './components/atoms/Label/Label';
 import Message from './components/atoms/Message/Message';
 import Spinner from './components/atoms/Spinner/Spinner';
 import Textarea from './components/atoms/Textarea/Textarea';
+import FormField from './components/molecules/FormField/FormField';
 import './App.css';
 
 function App() {
@@ -13,19 +13,22 @@ function App() {
 
   return (
     <main className="component-preview">
-      <h1>UI atoms</h1>
+      <h1>UI components</h1>
 
       <section className="component-preview__panel">
-        <div className="component-preview__field">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            placeholder="you@example.com"
-            onChange={setEmail}
-          />
-        </div>
+        <FormField
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          placeholder="you@example.com"
+          error={
+            email.length > 0 && !email.includes('@')
+              ? 'Enter a valid email address.'
+              : undefined
+          }
+          onChange={setEmail}
+        />
 
         <div className="component-preview__field">
           <Label htmlFor="bio">Bio</Label>
