@@ -1,15 +1,22 @@
 import { useState } from 'react';
+import type { LoginCredentials } from './types/auth';
 import Button from './components/atoms/Button/Button';
 import Label from './components/atoms/Label/Label';
 import Message from './components/atoms/Message/Message';
 import Spinner from './components/atoms/Spinner/Spinner';
 import Textarea from './components/atoms/Textarea/Textarea';
 import FormField from './components/molecules/FormField/FormField';
+import LoginForm from './components/organisms/LoginForm/LoginForm';
 import './App.css';
 
 function App() {
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
+  const [submittedEmail, setSubmittedEmail] = useState('');
+
+  const handleLogin = (credentials: LoginCredentials) => {
+    setSubmittedEmail(credentials.email);
+  };
 
   return (
     <main className="component-preview">
@@ -54,6 +61,16 @@ function App() {
           <Message variant="success">Changes saved successfully.</Message>
           <Message variant="error">Something went wrong.</Message>
         </div>
+      </section>
+
+      <section className="component-preview__panel">
+        <h2>Login form organism</h2>
+        <LoginForm onSubmit={handleLogin} />
+        {submittedEmail && (
+          <Message variant="success">
+            Form submitted for {submittedEmail}.
+          </Message>
+        )}
       </section>
     </main>
   );

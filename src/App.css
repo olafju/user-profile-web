@@ -18,6 +18,10 @@
   box-shadow: var(--shadow);
 }
 
+.component-preview__panel + .component-preview__panel {
+  margin-top: 24px;
+}
+
 .component-preview__field,
 .component-preview__messages {
   display: grid;

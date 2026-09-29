@@ -7,6 +7,7 @@ type InputProps = {
   value: string;
   placeholder?: string;
   disabled?: boolean;
+  autoComplete?: string;
   ariaDescribedBy?: string;
   invalid?: boolean;
   onChange: (value: string) => void;
@@ -18,6 +19,7 @@ function Input({
   value,
   placeholder,
   disabled,
+  autoComplete,
   ariaDescribedBy,
   invalid,
   onChange,
@@ -34,6 +36,7 @@ function Input({
       value={value}
       placeholder={placeholder}
       disabled={disabled}
+      autoComplete={autoComplete}
       aria-describedby={ariaDescribedBy}
       aria-invalid={invalid}
       onChange={handleChange}
