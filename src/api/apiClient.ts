@@ -26,11 +26,28 @@ const getErrorMessage = async (response: Response) => {
 
     if (
       typeof body === 'object' &&
-      body !== null &&
-      'message' in body &&
-      typeof body.message === 'string'
+      body !== null
     ) {
-      return body.message;
+      if ('details' in body && Array.isArray(body.details)) {
+        const firstDetail: unknown = body.details[0];
+
+        if (
+          typeof firstDetail === 'object' &&
+          firstDetail !== null &&
+          'message' in firstDetail &&
+          typeof firstDetail.message === 'string'
+        ) {
+          return firstDetail.message;
+        }
+      }
+
+      if ('error' in body && typeof body.error === 'string') {
+        return body.error;
+      }
+
+      if ('message' in body && typeof body.message === 'string') {
+        return body.message;
+      }
     }
   } catch {
     return fallbackMessage;
