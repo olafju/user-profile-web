@@ -3,7 +3,7 @@ import type { LoginCredentials } from './types/auth';
 import type { ProfileUpdate, UserProfile } from './types/profile';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ApiError from './api/ApiError';
-import { login } from './api/authApi';
+import { login, logout } from './api/authApi';
 import { getProfile, updateProfile } from './api/profileApi';
 import LoginPage from './pages/LoginPage/LoginPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
@@ -16,6 +16,7 @@ function App() {
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(
     null,
   );
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogin = async (credentials: LoginCredentials) => {
     const response = await login(credentials);
@@ -63,9 +64,24 @@ function App() {
     }
   };
 
-  const handleEndSession = () => {
-    setCurrentProfile(null);
-    endSession();
+  const handleLogout = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+
+    try {
+      if (token) {
+        await logout(token);
+      }
+    } catch {
+      // Local logout must still complete when the backend is unavailable.
+    } finally {
+      setCurrentProfile(null);
+      endSession();
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -87,7 +103,8 @@ function App() {
                 initialProfile={currentProfile}
                 saveProfile={handleSaveProfile}
                 refreshProfile={handleRefreshProfile}
-                onLogout={handleEndSession}
+                isLoggingOut={isLoggingOut}
+                onLogout={handleLogout}
               />
             ) : null}
           </ProtectedRoute>

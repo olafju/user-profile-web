@@ -7,6 +7,7 @@ type ProfilePageProps = {
   initialProfile: UserProfile;
   saveProfile: (profile: ProfileUpdate) => Promise<UserProfile>;
   refreshProfile: () => Promise<UserProfile>;
+  isLoggingOut?: boolean;
   onLogout: () => void;
 };
 
@@ -22,6 +23,7 @@ function ProfilePage({
   initialProfile,
   saveProfile,
   refreshProfile,
+  isLoggingOut,
   onLogout,
 }: ProfilePageProps) {
   const [profile, setProfile] = useState(initialProfile);
@@ -85,7 +87,11 @@ function ProfilePage({
   };
 
   return (
-    <ProfileTemplate title="Profile" onLogout={onLogout}>
+    <ProfileTemplate
+      title="Profile"
+      isLoggingOut={isLoggingOut}
+      onLogout={onLogout}
+    >
       <ProfileForm
         profile={profile}
         isSaving={isSaving}
