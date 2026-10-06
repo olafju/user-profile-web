@@ -12,8 +12,6 @@ jobs:
     name: Lint, test and build
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      VITE_API_URL: https://api.54-36-162-208.sslip.io
 
     steps:
       - name: Check out repository
