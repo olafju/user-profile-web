@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { LoginCredentials } from '../../types/auth';
+import { DEMO_CREDENTIALS, IS_DEMO_MODE } from '../../api/config';
+import Message from '../../components/atoms/Message/Message';
 import LoginForm from '../../components/organisms/LoginForm/LoginForm';
 import AuthTemplate from '../../components/templates/AuthTemplate/AuthTemplate';
 
@@ -37,6 +39,11 @@ function LoginPage({ login }: LoginPageProps) {
       title="Welcome back"
       description="Log in to manage your profile."
     >
+      {IS_DEMO_MODE && (
+        <Message variant="info">
+          Demo mode: {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
+        </Message>
+      )}
       <LoginForm
         isLoading={isLoading}
         submitError={submitError}

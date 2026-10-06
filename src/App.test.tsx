@@ -109,6 +109,22 @@ describe('App', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows a message when the backend is unavailable', async () => {
+    vi.mocked(login).mockRejectedValue(
+      new ApiError('Backend is unavailable.'),
+    );
+    renderApp();
+
+    await submitLoginForm();
+
+    expect(
+      await screen.findByText('Backend is unavailable.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Welcome back' }),
+    ).toBeInTheDocument();
+  });
+
   it('saves edited profile data with the session token', async () => {
     const savedProfile = {
       ...profile,
@@ -154,6 +170,23 @@ describe('App', () => {
     expect(
       screen.getByText('Profile refreshed successfully.'),
     ).toBeInTheDocument();
+  });
+
+  it('ends the session when refreshing the profile returns 401', async () => {
+    vi.mocked(getProfile).mockRejectedValue(
+      new ApiError('Session expired.', 401),
+    );
+    renderApp();
+    const user = await loginSuccessfully();
+
+    await user.click(screen.getByRole('button', { name: 'Refresh profile' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome back' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Profile' }),
+    ).not.toBeInTheDocument();
   });
 
   it('logs out on the server and returns to the login page', async () => {

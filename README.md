@@ -83,10 +83,30 @@ Następnie ustaw w `.env.local` adres działającego backendu:
 
 ```env
 VITE_API_URL=https://api.example.com
+VITE_DEMO_MODE=false
 ```
 
 Plik `.env.local` nie jest zapisywany w Git. Backend musi zezwalać w CORS na
 adres `http://localhost:5173`.
+
+### Tryb demonstracyjny
+
+Gdy backend jest niedostępny, aplikację można uruchomić z lokalnym API w
+pamięci, ustawiając:
+
+```env
+VITE_DEMO_MODE=true
+```
+
+Dane logowania są wtedy widoczne również na ekranie logowania:
+
+```text
+email: demo@example.com
+hasło: Demo123!
+```
+
+Profil demonstracyjny i jego zmiany istnieją tylko do czasu odświeżenia strony.
+Przed integracją z prawdziwym backendem należy ustawić `VITE_DEMO_MODE=false`.
 
 ### 3. Uruchomienie trybu deweloperskiego
 
