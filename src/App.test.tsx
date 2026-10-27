@@ -62,6 +62,7 @@ const loginSuccessfully = async () => {
 describe('App', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    sessionStorage.clear();
   });
 
   it('redirects a visitor without a session from profile to login', async () => {
@@ -94,6 +95,18 @@ describe('App', () => {
     });
     expect(screen.getByDisplayValue(profile.displayName)).toBeInTheDocument();
     expect(screen.getByDisplayValue(profile.bio)).toBeInTheDocument();
+    expect(sessionStorage.getItem('user-profile-token')).toBe('access-token');
+  });
+
+  it('restores the profile from a session stored before refresh', async () => {
+    sessionStorage.setItem('user-profile-token', 'stored-token');
+    vi.mocked(getProfile).mockResolvedValue(profile);
+
+    renderApp('/profile');
+
+    expect(screen.getByRole('status', { name: 'Loading profile' })).toBeInTheDocument();
+    expect(await screen.findByDisplayValue(profile.displayName)).toBeInTheDocument();
+    expect(getProfile).toHaveBeenCalledWith('stored-token');
   });
 
   it('shows the API error when login fails', async () => {
@@ -200,5 +213,6 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { name: 'Welcome back' }),
     ).toBeInTheDocument();
+    expect(sessionStorage.getItem('user-profile-token')).toBeNull();
   });
 });

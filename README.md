@@ -13,7 +13,8 @@ wyświetlaną i opis. Frontend komunikuje się z osobnym backendem przez REST AP
 
 - formularz logowania z walidacją danych,
 - obsługa błędów i stanów ładowania,
-- przechowywanie tokenu sesji wyłącznie w pamięci aplikacji,
+- przechowywanie tokenu sesji w `sessionStorage`, dzięki czemu sesja pozostaje
+  aktywna po odświeżeniu strony i znika po zamknięciu karty,
 - ochrona strony profilu przed niezalogowanym użytkownikiem,
 - wyświetlanie identyfikatora i adresu e-mail użytkownika,
 - edycja nazwy wyświetlanej oraz opisu profilu,
