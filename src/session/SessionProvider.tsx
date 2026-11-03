@@ -1,17 +1,39 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import SessionContext from './sessionContext';
 
 const SESSION_TOKEN_KEY = 'user-profile-token';
+
+const getStoredToken = () => localStorage.getItem(SESSION_TOKEN_KEY);
 
 type SessionProviderProps = {
   children: ReactNode;
 };
 
 function SessionProvider({ children }: SessionProviderProps) {
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem(SESSION_TOKEN_KEY);
-  });
+  const [token, setToken] = useState<string | null>(getStoredToken);
+
+  useEffect(() => {
+    const syncToken = () => {
+      setToken(getStoredToken());
+    };
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === SESSION_TOKEN_KEY || event.key === null) {
+        syncToken();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', syncToken);
+    window.addEventListener('pageshow', syncToken);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', syncToken);
+      window.removeEventListener('pageshow', syncToken);
+    };
+  }, []);
 
   const startSession = useCallback((newToken: string) => {
     localStorage.setItem(SESSION_TOKEN_KEY, newToken);

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -93,6 +93,25 @@ describe('App', () => {
     vi.mocked(getProfile).mockResolvedValue(profile);
 
     renderApp('/profile');
+
+    expect(
+      await screen.findByDisplayValue(profile.displayName),
+    ).toBeInTheDocument();
+    expect(getProfile).toHaveBeenCalledWith('stored-token');
+  });
+
+  it('synchronizes the session when the page regains focus', async () => {
+    vi.mocked(getProfile).mockResolvedValue(profile);
+    renderApp();
+
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome back' }),
+    ).toBeInTheDocument();
+
+    act(() => {
+      localStorage.setItem('user-profile-token', 'stored-token');
+      window.dispatchEvent(new Event('focus'));
+    });
 
     expect(
       await screen.findByDisplayValue(profile.displayName),
