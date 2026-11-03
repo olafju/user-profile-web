@@ -8,6 +8,9 @@ import ReadOnlyField from '../../molecules/ReadOnlyField/ReadOnlyField';
 import TextareaField from '../../molecules/TextareaField/TextareaField';
 import './ProfileForm.css';
 
+const DISPLAY_NAME_MAX_LENGTH = 80;
+const BIO_MAX_LENGTH = 280;
+
 type ProfileFormProps = {
   profile: UserProfile;
   isSaving?: boolean;
@@ -30,6 +33,14 @@ function ProfileForm({
   onRefresh,
 }: ProfileFormProps) {
   const isBusy = isSaving || isRefreshing;
+  const displayNameError =
+    profile.displayName.trim().length > DISPLAY_NAME_MAX_LENGTH
+      ? `Display name must be at most ${DISPLAY_NAME_MAX_LENGTH} characters.`
+      : undefined;
+  const bioError =
+    profile.bio.trim().length > BIO_MAX_LENGTH
+      ? `Bio must be at most ${BIO_MAX_LENGTH} characters.`
+      : undefined;
 
   const handleDisplayNameChange = (displayName: string) => {
     onChange({ displayName, bio: profile.bio });
@@ -42,9 +53,11 @@ function ProfileForm({
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!isBusy) {
-      onSave();
+    if (isBusy || displayNameError || bioError) {
+      return;
     }
+
+    onSave();
   };
 
   return (
@@ -61,6 +74,7 @@ function ProfileForm({
         value={profile.displayName}
         placeholder="Enter your display name"
         disabled={isBusy}
+        error={displayNameError}
         onChange={handleDisplayNameChange}
       />
 
@@ -70,6 +84,7 @@ function ProfileForm({
         value={profile.bio}
         placeholder="Write something about yourself"
         disabled={isBusy}
+        error={bioError}
         onChange={handleBioChange}
       />
 

@@ -18,6 +18,8 @@ wyświetlaną i opis. Frontend komunikuje się z osobnym backendem przez REST AP
 - ochrona strony profilu przed niezalogowanym użytkownikiem,
 - wyświetlanie identyfikatora i adresu e-mail użytkownika,
 - edycja nazwy wyświetlanej oraz opisu profilu,
+- walidacja długości nazwy (maks. 80 znaków) i opisu (maks. 280 znaków),
+  z pominięciem białych znaków na początku i końcu, zgodnie z API,
 - pobieranie aktualnych danych profilu,
 - wylogowanie lokalne i po stronie API,
 - automatyczne zakończenie sesji po odpowiedzi `401`,
@@ -49,8 +51,8 @@ src/
 |-- pages/        strony logowania i profilu
 |-- routing/      ochrona tras publicznych i prywatnych
 |-- session/      stan sesji oraz zapis tokenu w localStorage
-|-- test/         konfiguracja środowiska testowego
 `-- types/        wspólne typy TypeScript
+tests/            testy integracyjne i konfiguracja środowiska testowego
 ```
 
 Najważniejsze technologie:

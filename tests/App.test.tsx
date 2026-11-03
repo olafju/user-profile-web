@@ -2,19 +2,19 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import App from './App';
-import ApiError from './api/ApiError';
-import { login, logout } from './api/authApi';
-import { getProfile, updateProfile } from './api/profileApi';
-import SessionProvider from './session/SessionProvider';
-import type { UserProfile } from './types/profile';
+import App from '../src/App';
+import ApiError from '../src/api/ApiError';
+import { login, logout } from '../src/api/authApi';
+import { getProfile, updateProfile } from '../src/api/profileApi';
+import SessionProvider from '../src/session/SessionProvider';
+import type { UserProfile } from '../src/types/profile';
 
-vi.mock('./api/authApi', () => ({
+vi.mock('../src/api/authApi', () => ({
   login: vi.fn(),
   logout: vi.fn(),
 }));
 
-vi.mock('./api/profileApi', () => ({
+vi.mock('../src/api/profileApi', () => ({
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
 }));
@@ -164,6 +164,90 @@ describe('App', () => {
       await screen.findByText('Profile saved successfully.'),
     ).toBeInTheDocument();
   });
+
+  it.each([
+    {
+      field: 'displayName',
+      label: 'Display name',
+      limit: 80,
+      errorMessage: 'Display name must be at most 80 characters.',
+    },
+    {
+      field: 'bio',
+      label: 'Bio',
+      limit: 280,
+      errorMessage: 'Bio must be at most 280 characters.',
+    },
+  ])(
+    'blocks saving an overlong $label and allows saving after correction',
+    async ({ field, label, limit, errorMessage }) => {
+      const validValue = 'a'.repeat(limit);
+      const savedProfile = { ...profile, [field]: validValue };
+      vi.mocked(updateProfile).mockResolvedValue(savedProfile);
+      renderApp();
+      const user = await loginSuccessfully();
+      const input = screen.getByLabelText(label);
+
+      await user.clear(input);
+      await user.paste('a'.repeat(limit + 1));
+      await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(input).toHaveAccessibleDescription(errorMessage);
+      expect(updateProfile).not.toHaveBeenCalled();
+
+      await user.clear(input);
+      await user.paste(validValue);
+
+      expect(screen.queryByText(errorMessage)).not.toBeInTheDocument();
+      expect(input).toHaveAttribute('aria-invalid', 'false');
+      expect(input).not.toHaveAttribute('aria-describedby');
+
+      await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+      expect(updateProfile).toHaveBeenCalledWith('access-token', {
+        displayName: savedProfile.displayName,
+        bio: savedProfile.bio,
+      });
+      expect(
+        await screen.findByText('Profile saved successfully.'),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    { description: 'without surrounding whitespace', padding: '' },
+    { description: 'with surrounding whitespace', padding: '  ' },
+  ])(
+    'accepts profile values at both length limits $description',
+    async ({ padding }) => {
+      const savedProfile = {
+        ...profile,
+        displayName: 'a'.repeat(80),
+        bio: 'b'.repeat(280),
+      };
+      const displayName = `${padding}${savedProfile.displayName}${padding}`;
+      const bio = `${padding}${savedProfile.bio}${padding}`;
+      vi.mocked(updateProfile).mockResolvedValue(savedProfile);
+      renderApp();
+      const user = await loginSuccessfully();
+
+      await user.clear(screen.getByLabelText('Display name'));
+      await user.paste(displayName);
+      await user.clear(screen.getByLabelText('Bio'));
+      await user.paste(bio);
+      await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+      expect(updateProfile).toHaveBeenCalledWith('access-token', {
+        displayName,
+        bio,
+      });
+      expect(
+        await screen.findByText('Profile saved successfully.'),
+      ).toBeInTheDocument();
+    },
+  );
 
   it('refreshes the profile with data returned by the API', async () => {
     const refreshedProfile = {
