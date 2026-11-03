@@ -22,6 +22,7 @@
 }
 
 .button--primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
   box-shadow: var(--shadow);
 }
 

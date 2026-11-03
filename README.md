@@ -16,6 +16,7 @@ wyświetlaną i opis. Frontend komunikuje się z osobnym backendem przez REST AP
 - przechowywanie tokenu sesji w `localStorage`, dzięki czemu sesja pozostaje
   aktywna po odświeżeniu strony i ponownym uruchomieniu przeglądarki,
 - ochrona strony profilu przed niezalogowanym użytkownikiem,
+- responsywny szkielet aplikacji z sidebarem i górnym paskiem,
 - wyświetlanie identyfikatora i adresu e-mail użytkownika,
 - edycja nazwy wyświetlanej oraz opisu profilu,
 - walidacja długości nazwy (maks. 80 znaków) i opisu (maks. 280 znaków),

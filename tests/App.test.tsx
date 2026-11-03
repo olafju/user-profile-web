@@ -81,6 +81,9 @@ describe('App', () => {
       email: profile.email,
       password: 'secret123',
     });
+    expect(
+      screen.getByRole('navigation', { name: 'Main navigation' }),
+    ).toBeInTheDocument();
     expect(screen.getByDisplayValue(profile.displayName)).toBeInTheDocument();
     expect(localStorage.getItem('user-profile-token')).toBe('access-token');
   });
