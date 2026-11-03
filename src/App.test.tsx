@@ -62,7 +62,7 @@ const loginSuccessfully = async () => {
 describe('App', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('redirects a visitor without a session from profile to login', async () => {
@@ -95,11 +95,11 @@ describe('App', () => {
     });
     expect(screen.getByDisplayValue(profile.displayName)).toBeInTheDocument();
     expect(screen.getByDisplayValue(profile.bio)).toBeInTheDocument();
-    expect(sessionStorage.getItem('user-profile-token')).toBe('access-token');
+    expect(localStorage.getItem('user-profile-token')).toBe('access-token');
   });
 
-  it('restores the profile from a session stored before refresh', async () => {
-    sessionStorage.setItem('user-profile-token', 'stored-token');
+  it('restores the profile from a persisted token', async () => {
+    localStorage.setItem('user-profile-token', 'stored-token');
     vi.mocked(getProfile).mockResolvedValue(profile);
 
     renderApp('/profile');
@@ -213,6 +213,6 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { name: 'Welcome back' }),
     ).toBeInTheDocument();
-    expect(sessionStorage.getItem('user-profile-token')).toBeNull();
+    expect(localStorage.getItem('user-profile-token')).toBeNull();
   });
 });

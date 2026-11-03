@@ -10,16 +10,16 @@ type SessionProviderProps = {
 
 function SessionProvider({ children }: SessionProviderProps) {
   const [token, setToken] = useState<string | null>(() => {
-    return sessionStorage.getItem(SESSION_TOKEN_KEY);
+    return localStorage.getItem(SESSION_TOKEN_KEY);
   });
 
   const startSession = useCallback((newToken: string) => {
-    sessionStorage.setItem(SESSION_TOKEN_KEY, newToken);
+    localStorage.setItem(SESSION_TOKEN_KEY, newToken);
     setToken(newToken);
   }, []);
 
   const endSession = useCallback(() => {
-    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    localStorage.removeItem(SESSION_TOKEN_KEY);
     setToken(null);
   }, []);
 
