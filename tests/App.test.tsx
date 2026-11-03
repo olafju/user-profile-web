@@ -100,6 +100,28 @@ describe('App', () => {
     expect(getProfile).toHaveBeenCalledWith('stored-token');
   });
 
+  it('navigates between the dashboard and profile', async () => {
+    const user = await renderLoggedInApp();
+
+    await user.click(screen.getByRole('link', { name: 'Dashboard' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Dashboard' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Card 1' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Bar 2' }));
+
+    expect(await screen.findByText('Bar 2 works')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: 'Open profile' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Profile' }),
+    ).toBeInTheDocument();
+    expect(screen.getByDisplayValue(profile.displayName)).toBeInTheDocument();
+  });
+
   it('ends the session when the API returns 401', async () => {
     vi.mocked(getProfile).mockRejectedValue(
       new ApiError('Session expired.', 401),

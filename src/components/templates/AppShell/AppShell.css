@@ -52,6 +52,10 @@
   color: #cbbbd8;
   font-size: 0.88rem;
   font-weight: 600;
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .app-shell__navigation-item svg {
@@ -69,8 +73,14 @@
   stroke: none;
 }
 
-.app-shell__navigation-item--disabled {
-  opacity: 0.48;
+.app-shell__navigation-item:hover {
+  color: #fff;
+  background: rgba(170, 59, 255, 0.12);
+}
+
+.app-shell__navigation-item:focus-visible {
+  outline: 2px solid #c084fc;
+  outline-offset: 2px;
 }
 
 .app-shell__navigation-item--active {
@@ -95,6 +105,10 @@
   backdrop-filter: blur(12px);
 }
 
+.app-shell__topbar > div:first-child {
+  min-width: 0;
+}
+
 .app-shell__topbar h1 {
   margin: 0;
   color: var(--text-h);
@@ -107,6 +121,88 @@
   margin-top: 5px;
   color: var(--text);
   font-size: 0.84rem;
+}
+
+.app-shell__topbar-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-shell__search-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 210px;
+  min-height: 42px;
+  padding: 0 10px 0 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--bg);
+  font-size: 0.8rem;
+}
+
+.app-shell__search-placeholder svg,
+.app-shell__icon-placeholder svg,
+.app-shell__profile-link svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.app-shell__search-placeholder span {
+  flex: 1;
+}
+
+.app-shell__search-placeholder kbd {
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--page-bg);
+  font: 0.68rem var(--mono);
+}
+
+.app-shell__icon-placeholder,
+.app-shell__profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.app-shell__icon-placeholder {
+  opacity: 0.6;
+}
+
+.app-shell__profile-link {
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.app-shell__profile-link:hover,
+.app-shell__profile-link--active {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+
+.app-shell__profile-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .app-shell__content {
@@ -141,6 +237,10 @@
   .app-shell__navigation-item {
     min-height: 42px;
   }
+
+  .app-shell__search-placeholder {
+    display: none;
+  }
 }
 
 @media (max-width: 560px) {
@@ -164,8 +264,17 @@
   }
 
   .app-shell__topbar {
+    flex-direction: column;
     align-items: flex-start;
     padding: 20px;
+  }
+
+  .app-shell__topbar-actions {
+    width: 100%;
+  }
+
+  .app-shell__topbar-actions .button {
+    margin-left: auto;
   }
 
   .app-shell__description {

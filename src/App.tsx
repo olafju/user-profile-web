@@ -9,7 +9,9 @@ import Button from './components/atoms/Button/Button';
 import Message from './components/atoms/Message/Message';
 import Spinner from './components/atoms/Spinner/Spinner';
 import ProfileTemplate from './components/templates/ProfileTemplate/ProfileTemplate';
+import DashboardPage from './pages/DashboardPage/DashboardPage';
 import LoginPage from './pages/LoginPage/LoginPage';
+import PlaceholderPage from './pages/PlaceholderPage/PlaceholderPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import ProtectedRoute from './routing/ProtectedRoute';
 import PublicOnlyRoute from './routing/PublicOnlyRoute';
@@ -144,6 +146,41 @@ function App() {
           <PublicOnlyRoute>
             <LoginPage login={handleLogin} />
           </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardPage
+              isLoggingOut={isLoggingOut}
+              onLogout={handleLogout}
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bar-1"
+        element={
+          <ProtectedRoute>
+            <PlaceholderPage
+              title="Bar 1"
+              isLoggingOut={isLoggingOut}
+              onLogout={handleLogout}
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bar-2"
+        element={
+          <ProtectedRoute>
+            <PlaceholderPage
+              title="Bar 2"
+              isLoggingOut={isLoggingOut}
+              onLogout={handleLogout}
+            />
+          </ProtectedRoute>
         }
       />
       <Route
