@@ -52,7 +52,7 @@ src/
 |-- routing/      ochrona tras publicznych i prywatnych
 |-- session/      stan sesji oraz zapis tokenu w localStorage
 `-- types/        wspólne typy TypeScript
-tests/            testy integracyjne i konfiguracja środowiska testowego
+tests/            testy aplikacji, komponentów i konfiguracja testowa
 ```
 
 Najważniejsze technologie:
