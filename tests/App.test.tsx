@@ -88,6 +88,24 @@ describe('App', () => {
     expect(localStorage.getItem('user-profile-token')).toBe('access-token');
   });
 
+  it('returns to the protected page after logging in', async () => {
+    vi.mocked(login).mockResolvedValue({
+      token: 'access-token',
+      expiresAt: '2026-10-06T12:00:00.000Z',
+      user: profile,
+    });
+
+    renderApp('/bar-2');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome back' }),
+    ).toBeInTheDocument();
+
+    await submitLogin();
+
+    expect(await screen.findByText('Bar 2 works')).toBeInTheDocument();
+  });
+
   it('restores the profile from a stored token', async () => {
     localStorage.setItem('user-profile-token', 'stored-token');
     vi.mocked(getProfile).mockResolvedValue(profile);

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import useSession from '../session/useSession';
 
 type ProtectedRouteProps = {
@@ -8,9 +8,12 @@ type ProtectedRouteProps = {
 
 function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated } = useSession();
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+
+    return <Navigate to="/login" replace state={{ returnTo }} />;
   }
 
   return children;
