@@ -3,7 +3,10 @@ import type { Product } from '../../types/product';
 import './ProductsPage.css';
 
 type ProductsPageProps = {
+  canManage?: boolean;
   isLoggingOut?: boolean;
+  onEditProduct?: (product: Product) => void;
+  onDeleteProduct?: (product: Product) => void;
   onLogout: () => void;
 };
 
@@ -15,7 +18,7 @@ const products: Product[] = [
     price: 129.99,
     stock: 24,
     version: 1,
-    createdAt: '2026-11-02T09:30:00Z',
+    createdAt: '2026-11-10T09:30:00Z',
   },
   {
     id: 'product-2',
@@ -24,7 +27,7 @@ const products: Product[] = [
     price: 349,
     stock: 12,
     version: 1,
-    createdAt: '2026-11-03T11:15:00Z',
+    createdAt: '2026-11-10T11:15:00Z',
   },
   {
     id: 'product-3',
@@ -33,7 +36,7 @@ const products: Product[] = [
     price: 219.5,
     stock: 0,
     version: 1,
-    createdAt: '2026-11-05T08:00:00Z',
+    createdAt: '2026-11-10T08:00:00Z',
   },
   {
     id: 'product-4',
@@ -42,7 +45,7 @@ const products: Product[] = [
     price: 159,
     stock: 31,
     version: 1,
-    createdAt: '2026-11-07T14:45:00Z',
+    createdAt: '2026-11-10T14:45:00Z',
   },
 ];
 
@@ -54,7 +57,10 @@ const priceFormatter = new Intl.NumberFormat('pl-PL', {
 const dateFormatter = new Intl.DateTimeFormat('pl-PL');
 
 function ProductsPage({
+  canManage = false,
   isLoggingOut = false,
+  onEditProduct,
+  onDeleteProduct,
   onLogout,
 }: ProductsPageProps) {
   return (
@@ -82,6 +88,7 @@ function ProductsPage({
                 <th scope="col">Stock</th>
                 <th scope="col">Version</th>
                 <th scope="col">Added</th>
+                {canManage && <th scope="col">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -107,6 +114,29 @@ function ProductsPage({
                   </td>
                   <td>v{product.version}</td>
                   <td>{dateFormatter.format(new Date(product.createdAt))}</td>
+                  {canManage && (
+                    <td>
+                      <div className="products-page__actions">
+                        <button
+                          type="button"
+                          disabled={!onEditProduct}
+                          onClick={() => onEditProduct?.(product)}
+                          aria-label={`Edit ${product.name}`}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="products-page__action--danger"
+                          type="button"
+                          disabled={!onDeleteProduct}
+                          onClick={() => onDeleteProduct?.(product)}
+                          aria-label={`Delete ${product.name}`}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

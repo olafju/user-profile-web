@@ -100,6 +100,40 @@
   background: #fef3f2;
 }
 
+.products-page__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.products-page__actions button {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-h);
+  background: var(--bg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.products-page__actions button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.products-page__actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.products-page__actions .products-page__action--danger {
+  color: #b42318;
+}
+
+.products-page__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 @media (max-width: 560px) {
   .products-page__header {
     align-items: flex-start;
