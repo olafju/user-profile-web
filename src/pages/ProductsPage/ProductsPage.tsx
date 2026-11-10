@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AppShell from '../../components/templates/AppShell/AppShell';
 import type { Product } from '../../types/product';
 import './ProductsPage.css';
@@ -63,6 +65,45 @@ function ProductsPage({
   onDeleteProduct,
   onLogout,
 }: ProductsPageProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get('q') ?? '';
+  const [searchDraft, setSearchDraft] = useState({ query, value: query });
+  const searchValue = searchDraft.query === query ? searchDraft.value : query;
+
+  useEffect(() => {
+    const normalizedSearchValue = searchValue.trim();
+
+    if (normalizedSearchValue === query) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSearchParams(
+        (currentSearchParams) => {
+          const nextSearchParams = new URLSearchParams(currentSearchParams);
+
+          if (normalizedSearchValue) {
+            nextSearchParams.set('q', normalizedSearchValue);
+          } else {
+            nextSearchParams.delete('q');
+          }
+
+          return nextSearchParams;
+        },
+        { replace: true },
+      );
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [query, searchValue, setSearchParams]);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleProducts = products.filter((product) => {
+    const searchableText = `${product.name} ${product.description}`;
+
+    return searchableText.toLowerCase().includes(normalizedQuery);
+  });
+
   return (
     <AppShell
       title="Products"
@@ -76,8 +117,21 @@ function ProductsPage({
             <h2 id="products-title">Product list</h2>
             <p>Example data used until the products API is available.</p>
           </div>
-          <span>{products.length} products</span>
+          <span>{visibleProducts.length} products</span>
         </header>
+
+        <div className="products-page__search">
+          <label htmlFor="product-search">Search products</label>
+          <input
+            id="product-search"
+            type="search"
+            value={searchValue}
+            placeholder="Search by name or description"
+            onChange={(event) =>
+              setSearchDraft({ query, value: event.target.value })
+            }
+          />
+        </div>
 
         <div className="products-page__table-wrapper">
           <table aria-label="Example product list">
@@ -92,7 +146,7 @@ function ProductsPage({
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
+              {visibleProducts.map((product) => (
                 <tr key={product.id}>
                   <td>
                     <div className="products-page__product">
@@ -139,6 +193,16 @@ function ProductsPage({
                   )}
                 </tr>
               ))}
+              {visibleProducts.length === 0 && (
+                <tr>
+                  <td
+                    className="products-page__empty"
+                    colSpan={canManage ? 6 : 5}
+                  >
+                    No products found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
