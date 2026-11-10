@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -99,5 +99,38 @@ describe('ProductsPage', () => {
 
     expect(screen.getByText('USB-C Hub')).toBeInTheDocument();
     expect(screen.queryByText('Wireless Mouse')).not.toBeInTheDocument();
+  });
+
+  it('restores product sorting from the URL', () => {
+    renderProductsPage({ initialPath: '/products?sort=price' });
+
+    expect(screen.getByRole('combobox', { name: 'Sort products' })).toHaveValue(
+      'price',
+    );
+
+    const productRows = screen.getAllByRole('row').slice(1);
+
+    expect(within(productRows[0]).getByText('Wireless Mouse')).toBeInTheDocument();
+    expect(
+      within(productRows[productRows.length - 1]).getByText(
+        'Mechanical Keyboard',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('updates product sorting without removing the search query', async () => {
+    const user = userEvent.setup();
+
+    renderProductsPage({ initialPath: '/products?q=mouse' });
+
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Sort products' }),
+      '-price',
+    );
+
+    expect(screen.getByTestId('location-search')).toHaveTextContent('q=mouse');
+    expect(screen.getByTestId('location-search')).toHaveTextContent(
+      'sort=-price',
+    );
   });
 });

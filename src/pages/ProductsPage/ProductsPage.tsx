@@ -12,6 +12,23 @@ type ProductsPageProps = {
   onLogout: () => void;
 };
 
+type ProductSort =
+  | '-createdAt'
+  | 'createdAt'
+  | 'name'
+  | 'price'
+  | '-price';
+
+const defaultProductSort: ProductSort = '-createdAt';
+
+const productSortOptions: { value: ProductSort; label: string }[] = [
+  { value: '-createdAt', label: 'Newest first' },
+  { value: 'createdAt', label: 'Oldest first' },
+  { value: 'name', label: 'Name: A to Z' },
+  { value: 'price', label: 'Price: low to high' },
+  { value: '-price', label: 'Price: high to low' },
+];
+
 const products: Product[] = [
   {
     id: 'product-1',
@@ -58,6 +75,39 @@ const priceFormatter = new Intl.NumberFormat('pl-PL', {
 
 const dateFormatter = new Intl.DateTimeFormat('pl-PL');
 
+const getProductSort = (value: string | null): ProductSort => {
+  const matchingOption = productSortOptions.find(
+    (option) => option.value === value,
+  );
+
+  return matchingOption?.value ?? defaultProductSort;
+};
+
+const compareProducts = (
+  firstProduct: Product,
+  secondProduct: Product,
+  sort: ProductSort,
+) => {
+  switch (sort) {
+    case 'createdAt':
+      return (
+        Date.parse(firstProduct.createdAt) -
+        Date.parse(secondProduct.createdAt)
+      );
+    case '-createdAt':
+      return (
+        Date.parse(secondProduct.createdAt) -
+        Date.parse(firstProduct.createdAt)
+      );
+    case 'name':
+      return firstProduct.name.localeCompare(secondProduct.name);
+    case 'price':
+      return firstProduct.price - secondProduct.price;
+    case '-price':
+      return secondProduct.price - firstProduct.price;
+  }
+};
+
 function ProductsPage({
   canManage = false,
   isLoggingOut = false,
@@ -67,6 +117,7 @@ function ProductsPage({
 }: ProductsPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') ?? '';
+  const sort = getProductSort(searchParams.get('sort'));
   const [searchDraft, setSearchDraft] = useState({ query, value: query });
   const searchValue = searchDraft.query === query ? searchDraft.value : query;
 
@@ -98,11 +149,24 @@ function ProductsPage({
   }, [query, searchValue, setSearchParams]);
 
   const normalizedQuery = query.trim().toLowerCase();
-  const visibleProducts = products.filter((product) => {
-    const searchableText = `${product.name} ${product.description}`;
+  const visibleProducts = products
+    .filter((product) => {
+      const searchableText = `${product.name} ${product.description}`;
 
-    return searchableText.toLowerCase().includes(normalizedQuery);
-  });
+      return searchableText.toLowerCase().includes(normalizedQuery);
+    })
+    .sort((firstProduct, secondProduct) =>
+      compareProducts(firstProduct, secondProduct, sort),
+    );
+
+  const handleSortChange = (nextSort: string) => {
+    setSearchParams((currentSearchParams) => {
+      const nextSearchParams = new URLSearchParams(currentSearchParams);
+      nextSearchParams.set('sort', nextSort);
+
+      return nextSearchParams;
+    });
+  };
 
   return (
     <AppShell
@@ -120,17 +184,34 @@ function ProductsPage({
           <span>{visibleProducts.length} products</span>
         </header>
 
-        <div className="products-page__search">
-          <label htmlFor="product-search">Search products</label>
-          <input
-            id="product-search"
-            type="search"
-            value={searchValue}
-            placeholder="Search by name or description"
-            onChange={(event) =>
-              setSearchDraft({ query, value: event.target.value })
-            }
-          />
+        <div className="products-page__filters">
+          <div className="products-page__filter">
+            <label htmlFor="product-search">Search products</label>
+            <input
+              id="product-search"
+              type="search"
+              value={searchValue}
+              placeholder="Search by name or description"
+              onChange={(event) =>
+                setSearchDraft({ query, value: event.target.value })
+              }
+            />
+          </div>
+
+          <div className="products-page__filter products-page__filter--sort">
+            <label htmlFor="product-sort">Sort products</label>
+            <select
+              id="product-sort"
+              value={sort}
+              onChange={(event) => handleSortChange(event.target.value)}
+            >
+              {productSortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="products-page__table-wrapper">
