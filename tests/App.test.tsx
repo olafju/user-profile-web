@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
 import ApiError from '../src/api/ApiError';
 import { login, logout } from '../src/api/authApi';
-import { getProfile } from '../src/api/profileApi';
+import { getProfile, updateProfile } from '../src/api/profileApi';
 import SessionProvider from '../src/session/SessionProvider';
 import type { UserProfile } from '../src/types/profile';
 
@@ -178,6 +178,47 @@ describe('App', () => {
       await screen.findByRole('heading', { name: 'Welcome back' }),
     ).toBeInTheDocument();
     expect(localStorage.getItem('user-profile-token')).toBeNull();
+  });
+
+  it('shows profile field errors without clearing entered values', async () => {
+    const user = await renderLoggedInApp();
+    const displayNameInput = screen.getByLabelText('Display name');
+    const bioInput = screen.getByLabelText('Bio');
+
+    vi.mocked(updateProfile).mockRejectedValue(
+      new ApiError(
+        'Correct the highlighted fields.',
+        422,
+        'validation_failed',
+        {
+          displayName: 'This display name is unavailable.',
+          bio: 'The bio contains unsupported text.',
+        },
+      ),
+    );
+
+    await user.clear(displayNameInput);
+    await user.type(displayNameInput, 'Existing name');
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(updateProfile).toHaveBeenCalledWith('access-token', {
+      displayName: 'Existing name',
+      bio: profile.bio,
+    });
+    expect(
+      await screen.findByText('This display name is unavailable.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('The bio contains unsupported text.')).toBeInTheDocument();
+    expect(displayNameInput).toHaveValue('Existing name');
+    expect(displayNameInput).toHaveAttribute('aria-invalid', 'true');
+    expect(bioInput).toHaveAttribute('aria-invalid', 'true');
+
+    await user.type(displayNameInput, ' 2');
+
+    expect(
+      screen.queryByText('This display name is unavailable.'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('The bio contains unsupported text.')).toBeInTheDocument();
   });
 
   it('logs out and removes the stored token', async () => {

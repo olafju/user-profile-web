@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import type { ProfileUpdate, UserProfile } from '../../types/profile';
+import ApiError from '../../api/ApiError';
+import type {
+  ProfileFieldErrors,
+  ProfileUpdate,
+  UserProfile,
+} from '../../types/profile';
 import ProfileForm from '../../components/organisms/ProfileForm/ProfileForm';
 import ProfileTemplate from '../../components/templates/ProfileTemplate/ProfileTemplate';
 
@@ -19,6 +24,21 @@ const getErrorMessage = (error: unknown) => {
   return 'Unable to update the profile. Try again.';
 };
 
+const getProfileFieldErrors = (error: unknown): ProfileFieldErrors => {
+  if (
+    !(error instanceof ApiError) ||
+    error.status !== 422 ||
+    !error.fields
+  ) {
+    return {};
+  }
+
+  return {
+    displayName: error.fields.displayName,
+    bio: error.fields.bio,
+  };
+};
+
 function ProfilePage({
   initialProfile,
   saveProfile,
@@ -30,6 +50,7 @@ function ProfilePage({
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [fieldErrors, setFieldErrors] = useState<ProfileFieldErrors>({});
   const [successMessage, setSuccessMessage] = useState<string>();
 
   const clearMessages = () => {
@@ -38,9 +59,18 @@ function ProfilePage({
   };
 
   const handleChange = (changes: ProfileUpdate) => {
+    const displayNameChanged = changes.displayName !== profile.displayName;
+    const bioChanged = changes.bio !== profile.bio;
+
     setProfile((currentProfile) => ({
       ...currentProfile,
       ...changes,
+    }));
+    setFieldErrors((currentErrors) => ({
+      displayName: displayNameChanged
+        ? undefined
+        : currentErrors.displayName,
+      bio: bioChanged ? undefined : currentErrors.bio,
     }));
     clearMessages();
   };
@@ -51,6 +81,7 @@ function ProfilePage({
     }
 
     setIsSaving(true);
+    setFieldErrors({});
     clearMessages();
 
     try {
@@ -61,6 +92,7 @@ function ProfilePage({
       setProfile(savedProfile);
       setSuccessMessage('Profile saved successfully.');
     } catch (error: unknown) {
+      setFieldErrors(getProfileFieldErrors(error));
       setErrorMessage(getErrorMessage(error));
     } finally {
       setIsSaving(false);
@@ -73,6 +105,7 @@ function ProfilePage({
     }
 
     setIsRefreshing(true);
+    setFieldErrors({});
     clearMessages();
 
     try {
@@ -97,6 +130,7 @@ function ProfilePage({
         isSaving={isSaving}
         isRefreshing={isRefreshing}
         errorMessage={errorMessage}
+        fieldErrors={fieldErrors}
         successMessage={successMessage}
         onChange={handleChange}
         onSave={handleSave}

@@ -6,3 +6,7 @@ export type UserProfile = {
 };
 
 export type ProfileUpdate = Pick<UserProfile, 'displayName' | 'bio'>;
+
+export type ProfileFieldErrors = Partial<
+  Record<keyof ProfileUpdate, string>
+>;

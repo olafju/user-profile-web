@@ -1,5 +1,9 @@
 import type { FormEvent } from 'react';
-import type { ProfileUpdate, UserProfile } from '../../../types/profile';
+import type {
+  ProfileFieldErrors,
+  ProfileUpdate,
+  UserProfile,
+} from '../../../types/profile';
 import Button from '../../atoms/Button/Button';
 import Message from '../../atoms/Message/Message';
 import Spinner from '../../atoms/Spinner/Spinner';
@@ -16,6 +20,7 @@ type ProfileFormProps = {
   isSaving?: boolean;
   isRefreshing?: boolean;
   errorMessage?: string;
+  fieldErrors?: ProfileFieldErrors;
   successMessage?: string;
   onChange: (profile: ProfileUpdate) => void;
   onSave: () => void;
@@ -27,20 +32,24 @@ function ProfileForm({
   isSaving = false,
   isRefreshing = false,
   errorMessage,
+  fieldErrors,
   successMessage,
   onChange,
   onSave,
   onRefresh,
 }: ProfileFormProps) {
   const isBusy = isSaving || isRefreshing;
-  const displayNameError =
+  const displayNameValidationError =
     profile.displayName.trim().length > DISPLAY_NAME_MAX_LENGTH
       ? `Display name must be at most ${DISPLAY_NAME_MAX_LENGTH} characters.`
       : undefined;
-  const bioError =
+  const bioValidationError =
     profile.bio.trim().length > BIO_MAX_LENGTH
       ? `Bio must be at most ${BIO_MAX_LENGTH} characters.`
       : undefined;
+  const displayNameError =
+    displayNameValidationError ?? fieldErrors?.displayName;
+  const bioError = bioValidationError ?? fieldErrors?.bio;
 
   const handleDisplayNameChange = (displayName: string) => {
     onChange({ displayName, bio: profile.bio });
