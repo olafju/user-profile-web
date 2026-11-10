@@ -20,6 +20,7 @@ type ProductSort =
   | '-price';
 
 const defaultProductSort: ProductSort = '-createdAt';
+const mockProductsPerPage = 3;
 
 const productSortOptions: { value: ProductSort; label: string }[] = [
   { value: '-createdAt', label: 'Newest first' },
@@ -83,6 +84,12 @@ const getProductSort = (value: string | null): ProductSort => {
   return matchingOption?.value ?? defaultProductSort;
 };
 
+const getPageNumber = (value: string | null) => {
+  const pageNumber = Number(value);
+
+  return Number.isInteger(pageNumber) && pageNumber > 0 ? pageNumber : 1;
+};
+
 const compareProducts = (
   firstProduct: Product,
   secondProduct: Product,
@@ -139,6 +146,8 @@ function ProductsPage({
             nextSearchParams.delete('q');
           }
 
+          nextSearchParams.delete('page');
+
           return nextSearchParams;
         },
         { replace: true },
@@ -149,7 +158,7 @@ function ProductsPage({
   }, [query, searchValue, setSearchParams]);
 
   const normalizedQuery = query.trim().toLowerCase();
-  const visibleProducts = products
+  const matchingProducts = products
     .filter((product) => {
       const searchableText = `${product.name} ${product.description}`;
 
@@ -158,11 +167,61 @@ function ProductsPage({
     .sort((firstProduct, secondProduct) =>
       compareProducts(firstProduct, secondProduct, sort),
     );
+  const totalPages = Math.max(
+    1,
+    Math.ceil(matchingProducts.length / mockProductsPerPage),
+  );
+  const requestedPage = getPageNumber(searchParams.get('page'));
+  const currentPage = Math.min(requestedPage, totalPages);
+  const firstProductIndex = (currentPage - 1) * mockProductsPerPage;
+  const visibleProducts = matchingProducts.slice(
+    firstProductIndex,
+    firstProductIndex + mockProductsPerPage,
+  );
+
+  useEffect(() => {
+    const pageParam = searchParams.get('page');
+    const normalizedPageParam = currentPage === 1 ? null : String(currentPage);
+
+    if (pageParam === normalizedPageParam) {
+      return;
+    }
+
+    setSearchParams(
+      (currentSearchParams) => {
+        const nextSearchParams = new URLSearchParams(currentSearchParams);
+
+        if (currentPage === 1) {
+          nextSearchParams.delete('page');
+        } else {
+          nextSearchParams.set('page', String(currentPage));
+        }
+
+        return nextSearchParams;
+      },
+      { replace: true },
+    );
+  }, [currentPage, searchParams, setSearchParams]);
 
   const handleSortChange = (nextSort: string) => {
     setSearchParams((currentSearchParams) => {
       const nextSearchParams = new URLSearchParams(currentSearchParams);
       nextSearchParams.set('sort', nextSort);
+      nextSearchParams.delete('page');
+
+      return nextSearchParams;
+    });
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    setSearchParams((currentSearchParams) => {
+      const nextSearchParams = new URLSearchParams(currentSearchParams);
+
+      if (nextPage === 1) {
+        nextSearchParams.delete('page');
+      } else {
+        nextSearchParams.set('page', String(nextPage));
+      }
 
       return nextSearchParams;
     });
@@ -181,7 +240,7 @@ function ProductsPage({
             <h2 id="products-title">Product list</h2>
             <p>Example data used until the products API is available.</p>
           </div>
-          <span>{visibleProducts.length} products</span>
+          <span>{matchingProducts.length} products</span>
         </header>
 
         <div className="products-page__filters">
@@ -287,6 +346,28 @@ function ProductsPage({
             </tbody>
           </table>
         </div>
+
+        <nav className="products-page__pagination" aria-label="Product pages">
+          <p aria-live="polite">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div>
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              Next
+            </button>
+          </div>
+        </nav>
       </section>
     </AppShell>
   );
