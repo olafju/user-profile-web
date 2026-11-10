@@ -5,56 +5,74 @@ type ApiRequestOptions = RequestInit & {
   token?: string;
 };
 
+const isObject = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
+
 const getRequestUrl = (path: string) => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
   return `${API_URL}${normalizedPath}`;
 };
 
-const getErrorMessage = async (response: Response) => {
-  const fallbackMessage = `Request failed with status ${response.status}.`;
-  const contentType = response.headers.get('content-type');
 
-  if (!contentType?.includes('application/json')) {
+const getApiError = async (response: Response): Promise<ApiError> => {
+  const fallbackMessage = `Request failed with status ${response.status}.`;
+  const contentType = response.headers.get("content-type");
+
+  if (!contentType?.includes("application/json")) {
     const message = await response.text();
 
-    return message || fallbackMessage;
+    return new ApiError(message || fallbackMessage, response.status);
   }
 
   try {
     const body: unknown = await response.json();
 
-    if (
-      typeof body === 'object' &&
-      body !== null
-    ) {
-      if ('details' in body && Array.isArray(body.details)) {
+    if (isObject(body)) {
+      const error = body.error;
+
+      // Nowy format błędów z etapu 2
+      if (isObject(error) && typeof error.message === 'string') {
+
+        const code = typeof error.code === 'string' ? error.code : null;
+
+        const fields =
+          isObject(error.fields) &&
+          Object.values(error.fields).every(
+            (value) => typeof value === 'string',
+          )
+            ? (error.fields as Record<string, string>)
+            : undefined;
+
+        return new ApiError(error.message, response.status, code, fields);
+      }
+
+      // Obsługa starszego formatu błędów
+      if (Array.isArray(body.details)) {
         const firstDetail: unknown = body.details[0];
 
-        if (
-          typeof firstDetail === 'object' &&
-          firstDetail !== null &&
-          'message' in firstDetail &&
-          typeof firstDetail.message === 'string'
-        ) {
-          return firstDetail.message;
+        if (isObject(firstDetail) && typeof firstDetail.message === "string") {
+          return new ApiError(firstDetail.message, response.status);
         }
       }
 
-      if ('error' in body && typeof body.error === 'string') {
-        return body.error;
+      if (typeof body.error === "string") {
+        return new ApiError(body.error, response.status);
       }
 
-      if ('message' in body && typeof body.message === 'string') {
-        return body.message;
+      if (typeof body.message === "string") {
+        return new ApiError(body.message, response.status);
       }
     }
   } catch {
-    return fallbackMessage;
+    return new ApiError(fallbackMessage, response.status);
   }
 
-  return fallbackMessage;
+  return new ApiError(fallbackMessage, response.status);
 };
+
 
 const getResponseData = async <ResponseData>(response: Response) => {
   if (response.status === 204) {
@@ -105,7 +123,7 @@ const apiRequest = async <ResponseData = unknown>(
   }
 
   if (!response.ok) {
-    throw new ApiError(await getErrorMessage(response), response.status);
+    throw await getApiError(response);
   }
 
   return getResponseData<ResponseData>(response);
