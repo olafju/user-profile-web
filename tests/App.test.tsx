@@ -147,6 +147,13 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Card 1' })).toBeInTheDocument();
 
+    await user.click(screen.getByRole('link', { name: 'Products' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Products' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Wireless Mouse')).toBeInTheDocument();
+
     await user.click(screen.getByRole('link', { name: 'Bar 2' }));
 
     expect(await screen.findByText('Bar 2 works')).toBeInTheDocument();

@@ -12,6 +12,7 @@ import ProfileTemplate from './components/templates/ProfileTemplate/ProfileTempl
 import DashboardPage from './pages/DashboardPage/DashboardPage';
 import LoginPage from './pages/LoginPage/LoginPage';
 import PlaceholderPage from './pages/PlaceholderPage/PlaceholderPage';
+import ProductsPage from './pages/ProductsPage/ProductsPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import ProtectedRoute from './routing/ProtectedRoute';
 import PublicOnlyRoute from './routing/PublicOnlyRoute';
@@ -160,11 +161,10 @@ function App() {
         }
       />
       <Route
-        path="/bar-1"
+        path="/products"
         element={
           <ProtectedRoute>
-            <PlaceholderPage
-              title="Bar 1"
+            <ProductsPage
               isLoggingOut={isLoggingOut}
               onLogout={handleLogout}
             />

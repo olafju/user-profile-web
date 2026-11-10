@@ -40,6 +40,14 @@ function PlaceholderIcon() {
   );
 }
 
+function ProductIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="m4 7 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V7m-8 4v10" />
+    </svg>
+  );
+}
+
 function SearchIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -91,9 +99,9 @@ function AppShell({
               </NavLink>
             </li>
             <li>
-              <NavLink to="/bar-1" className={getNavigationClassName}>
-                <PlaceholderIcon />
-                <span>Bar 1</span>
+              <NavLink to="/products" className={getNavigationClassName}>
+                <ProductIcon />
+                <span>Products</span>
               </NavLink>
             </li>
             <li>
