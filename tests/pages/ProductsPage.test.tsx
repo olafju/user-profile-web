@@ -110,13 +110,16 @@ describe('ProductsPage', () => {
 
     const productRows = screen.getAllByRole('row').slice(1);
 
-    expect(within(productRows[0]).getByText('Wireless Mouse')).toBeInTheDocument();
+    expect(productRows).toHaveLength(10);
+    expect(
+      within(productRows[0]).getByText('Cable Organizer'),
+    ).toBeInTheDocument();
     expect(
       within(productRows[productRows.length - 1]).getByText(
-        'USB-C Hub',
+        'Mechanical Keyboard',
       ),
     ).toBeInTheDocument();
-    expect(screen.queryByText('Mechanical Keyboard')).not.toBeInTheDocument();
+    expect(screen.queryByText('Portable SSD')).not.toBeInTheDocument();
   });
 
   it('updates product sorting without removing the search query', async () => {
@@ -140,14 +143,18 @@ describe('ProductsPage', () => {
 
     renderProductsPage();
 
+    expect(screen.getByText('12 products')).toBeInTheDocument();
     expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
-    expect(screen.queryByText('USB-C Hub')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('row').slice(1)).toHaveLength(10);
+    expect(screen.queryByText('Cable Organizer')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     expect(screen.getByTestId('location-search')).toHaveTextContent('page=2');
     expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-    expect(screen.getByText('USB-C Hub')).toBeInTheDocument();
+    expect(screen.getAllByRole('row').slice(1)).toHaveLength(2);
+    expect(screen.getByText('Desk Mat')).toBeInTheDocument();
+    expect(screen.getByText('Cable Organizer')).toBeInTheDocument();
     expect(screen.queryByText('Wireless Mouse')).not.toBeInTheDocument();
   });
 
@@ -176,6 +183,6 @@ describe('ProductsPage', () => {
     });
 
     expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-    expect(screen.getByText('USB-C Hub')).toBeInTheDocument();
+    expect(screen.getByText('Desk Mat')).toBeInTheDocument();
   });
 });

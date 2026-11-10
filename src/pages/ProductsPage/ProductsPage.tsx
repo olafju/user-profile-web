@@ -20,7 +20,7 @@ type ProductSort =
   | '-price';
 
 const defaultProductSort: ProductSort = '-createdAt';
-const mockProductsPerPage = 3;
+const productsPerPage = 10;
 
 const productSortOptions: { value: ProductSort; label: string }[] = [
   { value: '-createdAt', label: 'Newest first' },
@@ -66,6 +66,78 @@ const products: Product[] = [
     stock: 31,
     version: 1,
     createdAt: '2026-11-10T14:45:00Z',
+  },
+  {
+    id: 'product-5',
+    name: 'Webcam',
+    description: 'Full HD webcam with an integrated privacy cover.',
+    price: 249.99,
+    stock: 18,
+    version: 1,
+    createdAt: '2026-11-09T10:45:00Z',
+  },
+  {
+    id: 'product-6',
+    name: 'Noise-Cancelling Headphones',
+    description: 'Wireless headphones with active noise cancellation.',
+    price: 499,
+    stock: 7,
+    version: 1,
+    createdAt: '2026-11-09T16:20:00Z',
+  },
+  {
+    id: 'product-7',
+    name: 'Portable SSD',
+    description: 'Fast external storage with a one-terabyte capacity.',
+    price: 419,
+    stock: 14,
+    version: 1,
+    createdAt: '2026-11-09T14:10:00Z',
+  },
+  {
+    id: 'product-8',
+    name: 'Monitor Light Bar',
+    description: 'Adjustable desk light mounted directly on a monitor.',
+    price: 189,
+    stock: 22,
+    version: 1,
+    createdAt: '2026-11-09T08:15:00Z',
+  },
+  {
+    id: 'product-9',
+    name: 'Desk Mat',
+    description: 'Large desk mat with a non-slip rubber base.',
+    price: 79.99,
+    stock: 40,
+    version: 1,
+    createdAt: '2026-11-08T15:00:00Z',
+  },
+  {
+    id: 'product-10',
+    name: 'USB Microphone',
+    description: 'Desktop microphone for calls and voice recording.',
+    price: 299,
+    stock: 9,
+    version: 1,
+    createdAt: '2026-11-09T12:00:00Z',
+  },
+  {
+    id: 'product-11',
+    name: 'Bluetooth Speaker',
+    description: 'Compact wireless speaker with twelve-hour battery life.',
+    price: 199,
+    stock: 16,
+    version: 1,
+    createdAt: '2026-11-09T09:30:00Z',
+  },
+  {
+    id: 'product-12',
+    name: 'Cable Organizer',
+    description: 'Set of reusable clips for arranging desk cables.',
+    price: 39.99,
+    stock: 52,
+    version: 1,
+    createdAt: '2026-11-08T10:00:00Z',
   },
 ];
 
@@ -169,14 +241,14 @@ function ProductsPage({
     );
   const totalPages = Math.max(
     1,
-    Math.ceil(matchingProducts.length / mockProductsPerPage),
+    Math.ceil(matchingProducts.length / productsPerPage),
   );
   const requestedPage = getPageNumber(searchParams.get('page'));
   const currentPage = Math.min(requestedPage, totalPages);
-  const firstProductIndex = (currentPage - 1) * mockProductsPerPage;
+  const firstProductIndex = (currentPage - 1) * productsPerPage;
   const visibleProducts = matchingProducts.slice(
     firstProductIndex,
-    firstProductIndex + mockProductsPerPage,
+    firstProductIndex + productsPerPage,
   );
 
   useEffect(() => {
