@@ -8,17 +8,25 @@ import type { Product } from '../../src/types/product';
 const renderProductsPage = (
   options: {
     canManage?: boolean;
+    errorMessage?: string;
     initialPath?: string;
+    isLoading?: boolean;
+    products?: Product[];
     onEditProduct?: (product: Product) => void;
     onDeleteProduct?: (product: Product) => void;
+    onRetry?: () => void;
   } = {},
 ) => {
   render(
     <MemoryRouter initialEntries={[options.initialPath ?? '/products']}>
       <ProductsPage
         canManage={options.canManage}
+        errorMessage={options.errorMessage}
+        isLoading={options.isLoading}
+        products={options.products}
         onEditProduct={options.onEditProduct}
         onDeleteProduct={options.onDeleteProduct}
+        onRetry={options.onRetry}
         onLogout={vi.fn()}
       />
       <LocationSearch />
@@ -184,5 +192,44 @@ describe('ProductsPage', () => {
 
     expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
     expect(screen.getByText('Desk Mat')).toBeInTheDocument();
+  });
+
+  it('shows a loading state without the product table', () => {
+    renderProductsPage({ isLoading: true });
+
+    expect(
+      screen.getByRole('status', { name: 'Loading products' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Loading products...')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('shows an error state with a retry action', async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
+
+    renderProductsPage({
+      errorMessage: 'Unable to load products.',
+      onRetry,
+    });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Unable to load products.',
+    );
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it('shows an empty state without pagination', () => {
+    renderProductsPage({ products: [] });
+
+    expect(screen.getByText('0 products')).toBeInTheDocument();
+    expect(screen.getByText('No products available.')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('navigation', { name: 'Product pages' }),
+    ).not.toBeInTheDocument();
   });
 });

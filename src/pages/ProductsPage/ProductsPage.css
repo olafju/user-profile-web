@@ -118,6 +118,17 @@
   text-align: center;
 }
 
+.products-page__state {
+  display: grid;
+  min-height: 220px;
+  align-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 40px 24px;
+  color: var(--text);
+  text-align: center;
+}
+
 .products-page__product {
   display: grid;
   gap: 3px;

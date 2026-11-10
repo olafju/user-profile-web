@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import Button from '../../components/atoms/Button/Button';
+import Message from '../../components/atoms/Message/Message';
+import Spinner from '../../components/atoms/Spinner/Spinner';
 import AppShell from '../../components/templates/AppShell/AppShell';
 import type { Product } from '../../types/product';
 import './ProductsPage.css';
 
 type ProductsPageProps = {
   canManage?: boolean;
+  errorMessage?: string;
+  isLoading?: boolean;
   isLoggingOut?: boolean;
+  products?: Product[];
   onEditProduct?: (product: Product) => void;
   onDeleteProduct?: (product: Product) => void;
+  onRetry?: () => void;
   onLogout: () => void;
 };
 
@@ -30,7 +37,7 @@ const productSortOptions: { value: ProductSort; label: string }[] = [
   { value: '-price', label: 'Price: high to low' },
 ];
 
-const products: Product[] = [
+const mockProducts: Product[] = [
   {
     id: 'product-1',
     name: 'Wireless Mouse',
@@ -189,9 +196,13 @@ const compareProducts = (
 
 function ProductsPage({
   canManage = false,
+  errorMessage,
+  isLoading = false,
   isLoggingOut = false,
+  products = mockProducts,
   onEditProduct,
   onDeleteProduct,
+  onRetry,
   onLogout,
 }: ProductsPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -252,6 +263,10 @@ function ProductsPage({
   );
 
   useEffect(() => {
+    if (isLoading || errorMessage) {
+      return;
+    }
+
     const pageParam = searchParams.get('page');
     const normalizedPageParam = currentPage === 1 ? null : String(currentPage);
 
@@ -273,7 +288,7 @@ function ProductsPage({
       },
       { replace: true },
     );
-  }, [currentPage, searchParams, setSearchParams]);
+  }, [currentPage, errorMessage, isLoading, searchParams, setSearchParams]);
 
   const handleSortChange = (nextSort: string) => {
     setSearchParams((currentSearchParams) => {
@@ -299,6 +314,15 @@ function ProductsPage({
     });
   };
 
+  const productCountLabel = isLoading
+    ? 'Loading...'
+    : errorMessage
+      ? 'Unavailable'
+      : `${matchingProducts.length} products`;
+  const emptyMessage = query
+    ? 'No products match your search.'
+    : 'No products available.';
+
   return (
     <AppShell
       title="Products"
@@ -306,140 +330,165 @@ function ProductsPage({
       isLoggingOut={isLoggingOut}
       onLogout={onLogout}
     >
-      <section className="products-page" aria-labelledby="products-title">
+      <section
+        className="products-page"
+        aria-busy={isLoading}
+        aria-labelledby="products-title"
+      >
         <header className="products-page__header">
           <div>
             <h2 id="products-title">Product list</h2>
             <p>Example data used until the products API is available.</p>
           </div>
-          <span>{matchingProducts.length} products</span>
+          <span>{productCountLabel}</span>
         </header>
 
-        <div className="products-page__filters">
-          <div className="products-page__filter">
-            <label htmlFor="product-search">Search products</label>
-            <input
-              id="product-search"
-              type="search"
-              value={searchValue}
-              placeholder="Search by name or description"
-              onChange={(event) =>
-                setSearchDraft({ query, value: event.target.value })
-              }
-            />
+        {isLoading ? (
+          <div className="products-page__state">
+            <Spinner label="Loading products" />
+            <p>Loading products...</p>
           </div>
-
-          <div className="products-page__filter products-page__filter--sort">
-            <label htmlFor="product-sort">Sort products</label>
-            <select
-              id="product-sort"
-              value={sort}
-              onChange={(event) => handleSortChange(event.target.value)}
-            >
-              {productSortOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+        ) : errorMessage ? (
+          <div className="products-page__state">
+            <Message variant="error">{errorMessage}</Message>
+            {onRetry && <Button onClick={onRetry}>Try again</Button>}
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="products-page__filters">
+              <div className="products-page__filter">
+                <label htmlFor="product-search">Search products</label>
+                <input
+                  id="product-search"
+                  type="search"
+                  value={searchValue}
+                  placeholder="Search by name or description"
+                  onChange={(event) =>
+                    setSearchDraft({ query, value: event.target.value })
+                  }
+                />
+              </div>
 
-        <div className="products-page__table-wrapper">
-          <table aria-label="Example product list">
-            <thead>
-              <tr>
-                <th scope="col">Product</th>
-                <th scope="col">Price</th>
-                <th scope="col">Stock</th>
-                <th scope="col">Version</th>
-                <th scope="col">Added</th>
-                {canManage && <th scope="col">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {visibleProducts.map((product) => (
-                <tr key={product.id}>
-                  <td>
-                    <div className="products-page__product">
-                      <strong>{product.name}</strong>
-                      <span>{product.description}</span>
-                    </div>
-                  </td>
-                  <td>{priceFormatter.format(product.price)}</td>
-                  <td>
-                    <span
-                      className={`products-page__stock${
-                        product.stock === 0
-                          ? ' products-page__stock--empty'
-                          : ''
-                      }`}
-                    >
-                      {product.stock}
-                    </span>
-                  </td>
-                  <td>v{product.version}</td>
-                  <td>{dateFormatter.format(new Date(product.createdAt))}</td>
-                  {canManage && (
-                    <td>
-                      <div className="products-page__actions">
-                        <button
-                          type="button"
-                          disabled={!onEditProduct}
-                          onClick={() => onEditProduct?.(product)}
-                          aria-label={`Edit ${product.name}`}
+              <div className="products-page__filter products-page__filter--sort">
+                <label htmlFor="product-sort">Sort products</label>
+                <select
+                  id="product-sort"
+                  value={sort}
+                  onChange={(event) => handleSortChange(event.target.value)}
+                >
+                  {productSortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="products-page__table-wrapper">
+              <table aria-label="Example product list">
+                <thead>
+                  <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Stock</th>
+                    <th scope="col">Version</th>
+                    <th scope="col">Added</th>
+                    {canManage && <th scope="col">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleProducts.map((product) => (
+                    <tr key={product.id}>
+                      <td>
+                        <div className="products-page__product">
+                          <strong>{product.name}</strong>
+                          <span>{product.description}</span>
+                        </div>
+                      </td>
+                      <td>{priceFormatter.format(product.price)}</td>
+                      <td>
+                        <span
+                          className={`products-page__stock${
+                            product.stock === 0
+                              ? ' products-page__stock--empty'
+                              : ''
+                          }`}
                         >
-                          Edit
-                        </button>
-                        <button
-                          className="products-page__action--danger"
-                          type="button"
-                          disabled={!onDeleteProduct}
-                          onClick={() => onDeleteProduct?.(product)}
-                          aria-label={`Delete ${product.name}`}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+                          {product.stock}
+                        </span>
+                      </td>
+                      <td>v{product.version}</td>
+                      <td>
+                        {dateFormatter.format(new Date(product.createdAt))}
+                      </td>
+                      {canManage && (
+                        <td>
+                          <div className="products-page__actions">
+                            <button
+                              type="button"
+                              disabled={!onEditProduct}
+                              onClick={() => onEditProduct?.(product)}
+                              aria-label={`Edit ${product.name}`}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="products-page__action--danger"
+                              type="button"
+                              disabled={!onDeleteProduct}
+                              onClick={() => onDeleteProduct?.(product)}
+                              aria-label={`Delete ${product.name}`}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                  {visibleProducts.length === 0 && (
+                    <tr>
+                      <td
+                        className="products-page__empty"
+                        colSpan={canManage ? 6 : 5}
+                      >
+                        {emptyMessage}
+                      </td>
+                    </tr>
                   )}
-                </tr>
-              ))}
-              {visibleProducts.length === 0 && (
-                <tr>
-                  <td
-                    className="products-page__empty"
-                    colSpan={canManage ? 6 : 5}
-                  >
-                    No products found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                </tbody>
+              </table>
+            </div>
 
-        <nav className="products-page__pagination" aria-label="Product pages">
-          <p aria-live="polite">
-            Page {currentPage} of {totalPages}
-          </p>
-          <div>
-            <button
-              type="button"
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              Previous
-            </button>
-            <button
-              type="button"
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              Next
-            </button>
-          </div>
-        </nav>
+            {matchingProducts.length > 0 && (
+              <nav
+                className="products-page__pagination"
+                aria-label="Product pages"
+              >
+                <p aria-live="polite">
+                  Page {currentPage} of {totalPages}
+                </p>
+                <div>
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
+              </nav>
+            )}
+          </>
+        )}
       </section>
     </AppShell>
   );
