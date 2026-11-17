@@ -219,6 +219,7 @@ function ProductsPage({
       await onDeleteProduct(productToDelete.id);
       setProductToDelete(null);
       setLoadAttempt((currentAttempt) => currentAttempt + 1);
+      showActionNotice('Product deleted successfully.');
     } catch (error: unknown) {
       setDeleteError(
         error instanceof Error && error.message
@@ -261,9 +262,27 @@ function ProductsPage({
             className="products-page__action-notice"
             key={actionNotice.key}
             role="status"
+            aria-label="Success notification"
+            aria-atomic="true"
           >
+            <span
+              className="products-page__action-notice-icon"
+              aria-hidden="true"
+            >
+              ✓
+            </span>
             <p>{actionNotice.message}</p>
-            <span aria-hidden="true" />
+            <button
+              type="button"
+              aria-label="Close notification"
+              onClick={() => setActionNotice(null)}
+            >
+              ×
+            </button>
+            <span
+              className="products-page__action-notice-progress"
+              aria-hidden="true"
+            />
           </div>
         )}
 

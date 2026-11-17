@@ -147,9 +147,15 @@ describe('ProductsPage', () => {
     expect(screen.getByRole('heading', { name: 'Add product' })).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toHaveValue('');
     expect(
-      document.querySelector('.products-page__action-notice span'),
+      document.querySelector('.products-page__action-notice-progress'),
     ).toBeInTheDocument();
 
+    await user.click(
+      screen.getByRole('button', { name: 'Close notification' }),
+    );
+    expect(
+      screen.queryByRole('status', { name: 'Success notification' }),
+    ).not.toBeInTheDocument();
   });
 
   it('requires confirmation before deleting a product', async () => {
@@ -180,6 +186,9 @@ describe('ProductsPage', () => {
     );
 
     expect(onDeleteProduct).toHaveBeenCalledWith('product-1');
+    expect(
+      await screen.findByText('Product deleted successfully.'),
+    ).toBeInTheDocument();
     await waitFor(() => {
       expect(getProducts).toHaveBeenCalledTimes(2);
     });
