@@ -36,9 +36,10 @@ describe('ProductForm', () => {
       price: 49.99,
       quantity: 12,
     });
-    expect(
-      await screen.findByText('Product created successfully.'),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(screen.getByLabelText('Description')).toHaveValue('');
+    expect(screen.getByLabelText('Price')).toHaveValue(null);
+    expect(screen.getByLabelText('Quantity')).toHaveValue(null);
   });
 
   it('edits an existing product and supports cancelling', async () => {
@@ -72,9 +73,10 @@ describe('ProductForm', () => {
       price: 44.5,
       quantity: 12,
     });
-    expect(
-      await screen.findByText('Product updated successfully.'),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(screen.getByLabelText('Description')).toHaveValue('');
+    expect(screen.getByLabelText('Price')).toHaveValue(null);
+    expect(screen.getByLabelText('Quantity')).toHaveValue(null);
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onCancel).toHaveBeenCalledOnce();

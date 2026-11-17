@@ -34,6 +34,33 @@
   font-weight: 700;
 }
 
+.products-page__action-notice {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 24px 17px;
+  border-bottom: 1px solid #abefc6;
+  color: #067647;
+  background: #ecfdf3;
+  font-weight: 700;
+}
+
+.products-page__action-notice span {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: #12b76a;
+  transform-origin: left;
+  animation: products-notice-countdown 4s linear forwards;
+}
+
+@keyframes products-notice-countdown {
+  to {
+    transform: scaleX(0);
+  }
+}
+
 .products-page__table-wrapper {
   overflow-x: auto;
 }
@@ -85,6 +112,31 @@
   padding: 40px 24px;
   color: var(--text);
   text-align: center;
+}
+
+.products-page__delete-confirmation {
+  display: grid;
+  gap: 18px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #fecdca;
+  background: #fef3f2;
+}
+
+.products-page__delete-confirmation > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.products-page__delete-confirmation h3 {
+  margin: 0;
+  color: #9b1c1c;
+  font-size: 1.1rem;
+}
+
+.products-page__delete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .products-page__product {
@@ -203,6 +255,11 @@
     padding: 20px;
   }
 
+  .products-page__action-notice {
+    padding-right: 20px;
+    padding-left: 20px;
+  }
+
   .products-page__pagination {
     align-items: stretch;
     flex-direction: column;
@@ -212,5 +269,13 @@
   .products-page__pagination > div {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .products-page__delete-confirmation {
+    padding: 20px;
+  }
+
+  .products-page__delete-actions .button {
+    width: 100%;
   }
 }

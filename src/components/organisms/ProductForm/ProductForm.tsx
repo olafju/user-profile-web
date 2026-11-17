@@ -74,7 +74,6 @@ function ProductForm({
   );
   const [fieldErrors, setFieldErrors] = useState<ProductFormErrors>({});
   const [submitError, setSubmitError] = useState<string>();
-  const [successMessage, setSuccessMessage] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const clearFieldState = (field: keyof ProductInput) => {
@@ -83,7 +82,6 @@ function ProductForm({
       [field]: undefined,
     }));
     setSubmitError(undefined);
-    setSuccessMessage(undefined);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -102,7 +100,6 @@ function ProductForm({
 
     setIsSubmitting(true);
     setSubmitError(undefined);
-    setSuccessMessage(undefined);
 
     try {
       await onSubmit({
@@ -111,17 +108,10 @@ function ProductForm({
         price: Number(price),
         quantity: Number(quantity),
       });
-      if (!isEditing) {
-        setName('');
-        setDescription('');
-        setPrice('');
-        setQuantity('');
-      }
-      setSuccessMessage(
-        isEditing
-          ? 'Product updated successfully.'
-          : 'Product created successfully.',
-      );
+      setName('');
+      setDescription('');
+      setPrice('');
+      setQuantity('');
     } catch (error: unknown) {
       setSubmitError(
         error instanceof Error && error.message
@@ -217,11 +207,7 @@ function ProductForm({
         </div>
       </div>
 
-      {submitError ? (
-        <Message variant="error">{submitError}</Message>
-      ) : successMessage ? (
-        <Message variant="success">{successMessage}</Message>
-      ) : null}
+      {submitError && <Message variant="error">{submitError}</Message>}
 
       <div className="product-form__actions">
         <Button type="submit" disabled={isSubmitting}>

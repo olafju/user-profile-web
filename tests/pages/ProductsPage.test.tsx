@@ -49,7 +49,8 @@ const renderProductsPage = (
   options: {
     canManage?: boolean;
     initialPath?: string;
-    onDeleteProduct?: () => void;
+    onCreateProduct?: (product: ProductInput) => Promise<void>;
+    onDeleteProduct?: (productId: string) => Promise<void>;
     onUpdateProduct?: (
       productId: string,
       product: ProductInput,
@@ -60,6 +61,7 @@ const renderProductsPage = (
     <MemoryRouter initialEntries={[options.initialPath ?? '/products']}>
       <ProductsPage
         canManage={options.canManage}
+        onCreateProduct={options.onCreateProduct}
         onDeleteProduct={options.onDeleteProduct}
         onUpdateProduct={options.onUpdateProduct}
         onLogout={vi.fn()}
@@ -114,12 +116,12 @@ describe('ProductsPage', () => {
 
   it('shows working management actions when management is enabled', async () => {
     const user = userEvent.setup();
+    const onCreateProduct = vi.fn().mockResolvedValue(undefined);
     const onUpdateProduct = vi.fn().mockResolvedValue(undefined);
-    const onDeleteProduct = vi.fn();
 
     renderProductsPage({
       canManage: true,
-      onDeleteProduct,
+      onCreateProduct,
       onUpdateProduct,
     });
 
@@ -142,12 +144,45 @@ describe('ProductsPage', () => {
     expect(
       await screen.findByText('Product updated successfully.'),
     ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Add product' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(
+      document.querySelector('.products-page__action-notice span'),
+    ).toBeInTheDocument();
+
+  });
+
+  it('requires confirmation before deleting a product', async () => {
+    const user = userEvent.setup();
+    const onDeleteProduct = vi.fn().mockResolvedValue(undefined);
+
+    renderProductsPage({
+      canManage: true,
+      onDeleteProduct,
+    });
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Delete Wireless Mouse' }),
+    );
+
+    expect(screen.getByText('Delete product?')).toBeInTheDocument();
+    expect(screen.getAllByText('Wireless Mouse')).toHaveLength(2);
+    expect(onDeleteProduct).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByText('Delete product?')).not.toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', { name: 'Delete Wireless Mouse' }),
     );
+    await user.click(
+      screen.getByRole('button', { name: 'Confirm deletion' }),
+    );
 
-    expect(onDeleteProduct).toHaveBeenCalledWith(firstPage.items[0]);
+    expect(onDeleteProduct).toHaveBeenCalledWith('product-1');
+    await waitFor(() => {
+      expect(getProducts).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('loads the page stored in the URL', async () => {

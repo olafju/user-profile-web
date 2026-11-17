@@ -12,6 +12,7 @@ import {
 } from '../src/api/profileApi';
 import {
   createProduct,
+  deleteProduct,
   getProducts,
   updateProduct,
 } from '../src/api/productApi';
@@ -32,6 +33,7 @@ vi.mock('../src/api/profileApi', () => ({
 
 vi.mock('../src/api/productApi', () => ({
   createProduct: vi.fn(),
+  deleteProduct: vi.fn(),
   getProducts: vi.fn(),
   updateProduct: vi.fn(),
 }));
@@ -121,6 +123,7 @@ describe('App', () => {
       quantity: 20,
       addedAt: '2026-11-17T09:30:00Z',
     });
+    vi.mocked(deleteProduct).mockResolvedValue(undefined);
   });
 
   it('redirects a visitor without a session to the login page', async () => {
@@ -175,6 +178,8 @@ describe('App', () => {
     expect(
       await screen.findByText('Product created successfully.'),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('');
+    expect(screen.getByLabelText('Description')).toHaveValue('');
   });
 
   it('logs in, displays the profile and stores the token', async () => {

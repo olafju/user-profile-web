@@ -54,4 +54,11 @@ const updateProduct = async (
   return response.item;
 };
 
-export { createProduct, getProducts, updateProduct };
+const deleteProduct = async (token: string, productId: string) => {
+  await apiRequest(`/api/products/${encodeURIComponent(productId)}`, {
+    method: 'DELETE',
+    token,
+  });
+};
+
+export { createProduct, deleteProduct, getProducts, updateProduct };

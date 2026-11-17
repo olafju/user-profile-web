@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import apiRequest from '../../src/api/apiClient';
 import {
   createProduct,
+  deleteProduct,
   getProducts,
   updateProduct,
 } from '../../src/api/productApi';
@@ -83,6 +84,16 @@ describe('productApi', () => {
       method: 'PUT',
       token: 'admin-token',
       body: JSON.stringify(product),
+    });
+  });
+
+  it('deletes a product with the administrator token', async () => {
+    vi.mocked(apiRequest).mockResolvedValue(undefined);
+
+    await expect(deleteProduct('admin-token', '12')).resolves.toBeUndefined();
+    expect(apiRequest).toHaveBeenCalledWith('/api/products/12', {
+      method: 'DELETE',
+      token: 'admin-token',
     });
   });
 });

@@ -12,7 +12,7 @@ import './ProductsPage.css';
 type ProductsPageProps = {
   canManage?: boolean;
   isLoggingOut?: boolean;
-  onDeleteProduct?: (product: Product) => void;
+  onDeleteProduct?: (productId: string) => Promise<void>;
   onCreateProduct?: (product: ProductInput) => Promise<void>;
   onUpdateProduct?: (
     productId: string,
@@ -27,6 +27,11 @@ type ProductsLoadState = {
   products: Product[];
   total: number;
   errorMessage?: string;
+};
+
+type ActionNotice = {
+  key: number;
+  message: string;
 };
 
 const productsPerPage = 10;
@@ -64,6 +69,10 @@ function ProductsPage({
   const requestedPage = getPageNumber(searchParams.get('page'));
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string>();
+  const [actionNotice, setActionNotice] = useState<ActionNotice | null>(null);
   const [loadState, setLoadState] = useState<ProductsLoadState>({
     page: null,
     attempt: 0,
@@ -140,6 +149,25 @@ function ProductsPage({
     setSearchParams,
   ]);
 
+  useEffect(() => {
+    if (!actionNotice) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActionNotice(null);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [actionNotice]);
+
+  const showActionNotice = (message: string) => {
+    setActionNotice((currentNotice) => ({
+      key: (currentNotice?.key ?? 0) + 1,
+      message,
+    }));
+  };
+
   const handlePageChange = (nextPage: number) => {
     setSearchParams((currentSearchParams) => {
       const nextSearchParams = new URLSearchParams(currentSearchParams);
@@ -165,6 +193,7 @@ function ProductsPage({
 
     await onCreateProduct(product);
     setLoadAttempt((currentAttempt) => currentAttempt + 1);
+    showActionNotice('Product created successfully.');
   };
 
   const handleUpdateProduct = async (product: ProductInput) => {
@@ -174,6 +203,31 @@ function ProductsPage({
 
     await onUpdateProduct(editingProduct.id, product);
     setLoadAttempt((currentAttempt) => currentAttempt + 1);
+    setEditingProduct(null);
+    showActionNotice('Product updated successfully.');
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete || !onDeleteProduct || isDeleting) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(undefined);
+
+    try {
+      await onDeleteProduct(productToDelete.id);
+      setProductToDelete(null);
+      setLoadAttempt((currentAttempt) => currentAttempt + 1);
+    } catch (error: unknown) {
+      setDeleteError(
+        error instanceof Error && error.message
+          ? error.message
+          : 'Unable to delete the product. Try again.',
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const productCountLabel = isLoading
@@ -202,6 +256,17 @@ function ProductsPage({
           <span>{productCountLabel}</span>
         </header>
 
+        {actionNotice && (
+          <div
+            className="products-page__action-notice"
+            key={actionNotice.key}
+            role="status"
+          >
+            <p>{actionNotice.message}</p>
+            <span aria-hidden="true" />
+          </div>
+        )}
+
         {canManage && editingProduct && onUpdateProduct ? (
           <ProductForm
             key={editingProduct.id}
@@ -212,6 +277,44 @@ function ProductsPage({
         ) : canManage && onCreateProduct ? (
           <ProductForm key="create-product" onSubmit={handleCreateProduct} />
         ) : null}
+
+        {canManage && productToDelete && onDeleteProduct && (
+          <section
+            className="products-page__delete-confirmation"
+            aria-labelledby="delete-product-title"
+          >
+            <div>
+              <h3 id="delete-product-title">Delete product?</h3>
+              <p>
+                <strong>{productToDelete.name}</strong> will be permanently
+                removed from the catalogue.
+              </p>
+            </div>
+
+            {deleteError && <Message variant="error">{deleteError}</Message>}
+
+            <div className="products-page__delete-actions">
+              <Button
+                variant="danger"
+                disabled={isDeleting}
+                onClick={handleDeleteProduct}
+              >
+                {isDeleting && <Spinner label="Deleting product" />}
+                {isDeleting ? 'Deleting...' : 'Confirm deletion'}
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={isDeleting}
+                onClick={() => {
+                  setProductToDelete(null);
+                  setDeleteError(undefined);
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </section>
+        )}
 
         {isLoading ? (
           <div className="products-page__state">
@@ -275,7 +378,10 @@ function ProductsPage({
                               className="products-page__action--danger"
                               type="button"
                               disabled={!onDeleteProduct}
-                              onClick={() => onDeleteProduct?.(product)}
+                              onClick={() => {
+                                setProductToDelete(product);
+                                setDeleteError(undefined);
+                              }}
                               aria-label={`Delete ${product.name}`}
                             >
                               Delete

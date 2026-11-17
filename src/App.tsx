@@ -5,7 +5,11 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ApiError from './api/ApiError';
 import { login, logout, register } from './api/authApi';
 import { deleteAccount, getProfile, updateProfile } from './api/profileApi';
-import { createProduct, updateProduct } from './api/productApi';
+import {
+  createProduct,
+  deleteProduct,
+  updateProduct,
+} from './api/productApi';
 import Button from './components/atoms/Button/Button';
 import Message from './components/atoms/Message/Message';
 import Spinner from './components/atoms/Spinner/Spinner';
@@ -151,6 +155,15 @@ function App() {
     }
   };
 
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteProduct(getSessionToken(), productId);
+    } catch (error: unknown) {
+      handleAuthenticatedError(error);
+      throw error;
+    }
+  };
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -214,6 +227,7 @@ function App() {
             isLoggingOut={isLoggingOut}
             onCreateProduct={role === 'admin' ? handleCreateProduct : undefined}
             onUpdateProduct={role === 'admin' ? handleUpdateProduct : undefined}
+            onDeleteProduct={role === 'admin' ? handleDeleteProduct : undefined}
             onLogout={isAuthenticated ? handleLogout : undefined}
           />
         }
