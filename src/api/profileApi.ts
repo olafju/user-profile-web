@@ -23,4 +23,12 @@ const updateProfile = async (token: string, changes: ProfileUpdate) => {
   return response.user;
 };
 
-export { getProfile, updateProfile };
+const deleteAccount = async (token: string, password: string) => {
+  await apiRequest('/api/auth/me', {
+    method: 'DELETE',
+    token,
+    body: JSON.stringify({ password }),
+  });
+};
+
+export { deleteAccount, getProfile, updateProfile };

@@ -4,17 +4,23 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
 import ApiError from '../src/api/ApiError';
-import { login, logout } from '../src/api/authApi';
-import { getProfile, updateProfile } from '../src/api/profileApi';
+import { login, logout, register } from '../src/api/authApi';
+import {
+  deleteAccount,
+  getProfile,
+  updateProfile,
+} from '../src/api/profileApi';
 import SessionProvider from '../src/session/SessionProvider';
 import type { UserProfile } from '../src/types/profile';
 
 vi.mock('../src/api/authApi', () => ({
   login: vi.fn(),
   logout: vi.fn(),
+  register: vi.fn(),
 }));
 
 vi.mock('../src/api/profileApi', () => ({
+  deleteAccount: vi.fn(),
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
 }));
@@ -86,6 +92,38 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(screen.getByDisplayValue(profile.displayName)).toBeInTheDocument();
     expect(localStorage.getItem('user-profile-token')).toBe('access-token');
+  });
+
+  it('registers a new account without starting a session', async () => {
+    vi.mocked(register).mockResolvedValue({
+      message: 'Account created.',
+      user: {
+        ...profile,
+        bio: '',
+      },
+    });
+    const user = userEvent.setup();
+
+    renderApp();
+
+    await user.click(screen.getByRole('link', { name: 'Create one' }));
+    await user.type(screen.getByLabelText('Display name'), 'New User');
+    await user.type(screen.getByLabelText('Email'), 'new@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
+    await user.type(screen.getByLabelText('Repeat password'), 'password123');
+    await user.click(screen.getByRole('button', { name: 'Create account' }));
+
+    expect(register).toHaveBeenCalledWith({
+      displayName: 'New User',
+      email: 'new@example.com',
+      password: 'password123',
+    });
+    expect(
+      await screen.findByText(
+        'Account created successfully. You can now log in.',
+      ),
+    ).toBeInTheDocument();
+    expect(localStorage.getItem('user-profile-token')).toBeNull();
   });
 
   it('returns to the protected page after logging in', async () => {
@@ -231,6 +269,32 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { name: 'Welcome back' }),
     ).toBeInTheDocument();
+    expect(localStorage.getItem('user-profile-token')).toBeNull();
+  });
+
+  it('deletes the account and ends the session', async () => {
+    vi.mocked(deleteAccount).mockResolvedValue(undefined);
+    const user = await renderLoggedInApp();
+
+    await user.type(
+      screen.getByLabelText('Current password'),
+      'password123',
+    );
+    await user.click(
+      screen.getByRole('checkbox', {
+        name: 'I understand that this action cannot be undone.',
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Delete account' }));
+
+    expect(deleteAccount).toHaveBeenCalledWith(
+      'access-token',
+      'password123',
+    );
+    expect(
+      await screen.findByRole('heading', { name: 'Welcome back' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Your account has been deleted.')).toBeInTheDocument();
     expect(localStorage.getItem('user-profile-token')).toBeNull();
   });
 });

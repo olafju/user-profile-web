@@ -1,4 +1,6 @@
 .profile-template__content {
+  display: grid;
+  gap: 28px;
   width: min(100%, 780px);
   padding: 32px;
   border: 1px solid var(--border);

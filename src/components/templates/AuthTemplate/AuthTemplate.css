@@ -37,6 +37,15 @@
   color: var(--text);
 }
 
+.auth-template__footer {
+  text-align: center;
+}
+
+.auth-template__footer a {
+  color: var(--accent-hover);
+  font-weight: 600;
+}
+
 @media (max-width: 480px) {
   .auth-template {
     padding: 16px;

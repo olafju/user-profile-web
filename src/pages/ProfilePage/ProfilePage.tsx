@@ -6,12 +6,14 @@ import type {
   UserProfile,
 } from '../../types/profile';
 import ProfileForm from '../../components/organisms/ProfileForm/ProfileForm';
+import DeleteAccountForm from '../../components/organisms/DeleteAccountForm/DeleteAccountForm';
 import ProfileTemplate from '../../components/templates/ProfileTemplate/ProfileTemplate';
 
 type ProfilePageProps = {
   initialProfile: UserProfile;
   saveProfile: (profile: ProfileUpdate) => Promise<UserProfile>;
   refreshProfile: () => Promise<UserProfile>;
+  deleteAccount: (password: string) => Promise<void>;
   isLoggingOut?: boolean;
   onLogout: () => void;
 };
@@ -43,6 +45,7 @@ function ProfilePage({
   initialProfile,
   saveProfile,
   refreshProfile,
+  deleteAccount,
   isLoggingOut,
   onLogout,
 }: ProfilePageProps) {
@@ -136,6 +139,7 @@ function ProfilePage({
         onSave={handleSave}
         onRefresh={handleRefresh}
       />
+      <DeleteAccountForm onDelete={deleteAccount} />
     </ProfileTemplate>
   );
 }

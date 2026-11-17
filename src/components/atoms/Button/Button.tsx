@@ -3,7 +3,7 @@ import './Button.css';
 
 type ButtonProps = {
   type?: 'button' | 'submit';
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'danger';
   disabled?: boolean;
   children: ReactNode;
   onClick?: MouseEventHandler<HTMLButtonElement>;

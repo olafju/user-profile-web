@@ -1,0 +1,45 @@
+.delete-account {
+  display: grid;
+  gap: 20px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+.delete-account > div {
+  display: grid;
+  gap: 6px;
+}
+
+.delete-account h2 {
+  color: #9b1c1c;
+}
+
+.delete-account__form {
+  display: grid;
+  gap: 18px;
+}
+
+.delete-account__confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.delete-account__confirmation input {
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: #b42318;
+}
+
+.delete-account__form > .button {
+  justify-self: start;
+}
+
+@media (max-width: 560px) {
+  .delete-account__form > .button {
+    width: 100%;
+  }
+}

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { LoginCredentials } from './types/auth';
+import type { LoginCredentials, RegisterCredentials } from './types/auth';
 import type { ProfileUpdate, UserProfile } from './types/profile';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ApiError from './api/ApiError';
-import { login, logout } from './api/authApi';
-import { getProfile, updateProfile } from './api/profileApi';
+import { login, logout, register } from './api/authApi';
+import { deleteAccount, getProfile, updateProfile } from './api/profileApi';
 import Button from './components/atoms/Button/Button';
 import Message from './components/atoms/Message/Message';
 import Spinner from './components/atoms/Spinner/Spinner';
@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage/LoginPage';
 import PlaceholderPage from './pages/PlaceholderPage/PlaceholderPage';
 import ProductsPage from './pages/ProductsPage/ProductsPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
+import RegisterPage from './pages/RegisterPage/RegisterPage';
 import ProtectedRoute from './routing/ProtectedRoute';
 import PublicOnlyRoute from './routing/PublicOnlyRoute';
 import useSession from './session/useSession';
@@ -26,6 +27,7 @@ function App() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [profileLoadError, setProfileLoadError] = useState<string>();
   const [profileLoadAttempt, setProfileLoadAttempt] = useState(0);
+  const [authNotice, setAuthNotice] = useState<string>();
   const isRestoringProfile = Boolean(
     token && !currentProfile && !profileLoadError,
   );
@@ -71,6 +73,11 @@ function App() {
     setProfileLoadError(undefined);
     setCurrentProfile(response.user);
     startSession(response.token);
+    setAuthNotice(undefined);
+  };
+
+  const handleRegister = async (credentials: RegisterCredentials) => {
+    await register(credentials);
   };
 
   const getSessionToken = () => {
@@ -113,6 +120,14 @@ function App() {
     }
   };
 
+  const handleDeleteAccount = async (password: string) => {
+    await deleteAccount(getSessionToken(), password);
+    setCurrentProfile(null);
+    setProfileLoadError(undefined);
+    setAuthNotice('Your account has been deleted.');
+    endSession();
+  };
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -145,7 +160,15 @@ function App() {
         path="/login"
         element={
           <PublicOnlyRoute>
-            <LoginPage login={handleLogin} />
+            <LoginPage login={handleLogin} notice={authNotice} />
+          </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicOnlyRoute>
+            <RegisterPage register={handleRegister} />
           </PublicOnlyRoute>
         }
       />
@@ -192,6 +215,7 @@ function App() {
                 initialProfile={currentProfile}
                 saveProfile={handleSaveProfile}
                 refreshProfile={handleRefreshProfile}
+                deleteAccount={handleDeleteAccount}
                 isLoggingOut={isLoggingOut}
                 onLogout={handleLogout}
               />
