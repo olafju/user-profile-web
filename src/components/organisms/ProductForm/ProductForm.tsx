@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import type { ProductInput } from '../../../types/product';
+import type { Product, ProductInput } from '../../../types/product';
 import Button from '../../atoms/Button/Button';
 import Message from '../../atoms/Message/Message';
 import Spinner from '../../atoms/Spinner/Spinner';
@@ -9,7 +9,9 @@ import TextareaField from '../../molecules/TextareaField/TextareaField';
 import './ProductForm.css';
 
 type ProductFormProps = {
+  initialProduct?: Product;
   onSubmit: (product: ProductInput) => Promise<void>;
+  onCancel?: () => void;
 };
 
 type ProductFormErrors = Partial<Record<keyof ProductInput, string>>;
@@ -54,11 +56,22 @@ const validateProduct = (
   return errors;
 };
 
-function ProductForm({ onSubmit }: ProductFormProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [quantity, setQuantity] = useState('');
+function ProductForm({
+  initialProduct,
+  onSubmit,
+  onCancel,
+}: ProductFormProps) {
+  const isEditing = Boolean(initialProduct);
+  const [name, setName] = useState(initialProduct?.name ?? '');
+  const [description, setDescription] = useState(
+    initialProduct?.description ?? '',
+  );
+  const [price, setPrice] = useState(
+    initialProduct ? String(initialProduct.price) : '',
+  );
+  const [quantity, setQuantity] = useState(
+    initialProduct ? String(initialProduct.quantity) : '',
+  );
   const [fieldErrors, setFieldErrors] = useState<ProductFormErrors>({});
   const [submitError, setSubmitError] = useState<string>();
   const [successMessage, setSuccessMessage] = useState<string>();
@@ -98,11 +111,17 @@ function ProductForm({ onSubmit }: ProductFormProps) {
         price: Number(price),
         quantity: Number(quantity),
       });
-      setName('');
-      setDescription('');
-      setPrice('');
-      setQuantity('');
-      setSuccessMessage('Product created successfully.');
+      if (!isEditing) {
+        setName('');
+        setDescription('');
+        setPrice('');
+        setQuantity('');
+      }
+      setSuccessMessage(
+        isEditing
+          ? 'Product updated successfully.'
+          : 'Product created successfully.',
+      );
     } catch (error: unknown) {
       setSubmitError(
         error instanceof Error && error.message
@@ -122,8 +141,12 @@ function ProductForm({ onSubmit }: ProductFormProps) {
       onSubmit={handleSubmit}
     >
       <div className="product-form__header">
-        <h3>Add product</h3>
-        <p>Create a new item in the public catalogue.</p>
+        <h3>{isEditing ? 'Edit product' : 'Add product'}</h3>
+        <p>
+          {isEditing
+            ? 'Update the selected product.'
+            : 'Create a new item in the public catalogue.'}
+        </p>
       </div>
 
       <div className="product-form__fields">
@@ -200,10 +223,29 @@ function ProductForm({ onSubmit }: ProductFormProps) {
         <Message variant="success">{successMessage}</Message>
       ) : null}
 
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting && <Spinner label="Creating product" />}
-        {isSubmitting ? 'Creating product...' : 'Add product'}
-      </Button>
+      <div className="product-form__actions">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting && (
+            <Spinner label={isEditing ? 'Updating product' : 'Creating product'} />
+          )}
+          {isSubmitting
+            ? isEditing
+              ? 'Saving changes...'
+              : 'Creating product...'
+            : isEditing
+              ? 'Save changes'
+              : 'Add product'}
+        </Button>
+        {onCancel && (
+          <Button
+            variant="secondary"
+            disabled={isSubmitting}
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

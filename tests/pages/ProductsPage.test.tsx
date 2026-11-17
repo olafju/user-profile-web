@@ -4,7 +4,10 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getProducts } from '../../src/api/productApi';
 import ProductsPage from '../../src/pages/ProductsPage/ProductsPage';
-import type { ProductListResponse } from '../../src/types/product';
+import type {
+  ProductInput,
+  ProductListResponse,
+} from '../../src/types/product';
 
 vi.mock('../../src/api/productApi', () => ({
   getProducts: vi.fn(),
@@ -46,16 +49,19 @@ const renderProductsPage = (
   options: {
     canManage?: boolean;
     initialPath?: string;
-    onEditProduct?: () => void;
     onDeleteProduct?: () => void;
+    onUpdateProduct?: (
+      productId: string,
+      product: ProductInput,
+    ) => Promise<void>;
   } = {},
 ) => {
   render(
     <MemoryRouter initialEntries={[options.initialPath ?? '/products']}>
       <ProductsPage
         canManage={options.canManage}
-        onEditProduct={options.onEditProduct}
         onDeleteProduct={options.onDeleteProduct}
+        onUpdateProduct={options.onUpdateProduct}
         onLogout={vi.fn()}
       />
       <LocationSearch />
@@ -108,23 +114,39 @@ describe('ProductsPage', () => {
 
   it('shows working management actions when management is enabled', async () => {
     const user = userEvent.setup();
-    const onEditProduct = vi.fn();
+    const onUpdateProduct = vi.fn().mockResolvedValue(undefined);
     const onDeleteProduct = vi.fn();
 
     renderProductsPage({
       canManage: true,
-      onEditProduct,
       onDeleteProduct,
+      onUpdateProduct,
     });
 
     await user.click(
       await screen.findByRole('button', { name: 'Edit Wireless Mouse' }),
     );
+    expect(screen.getByRole('heading', { name: 'Edit product' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('Wireless Mouse');
+
+    await user.clear(screen.getByLabelText('Name'));
+    await user.type(screen.getByLabelText('Name'), 'Quiet Mouse');
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(onUpdateProduct).toHaveBeenCalledWith('product-1', {
+      name: 'Quiet Mouse',
+      description: 'Compact wireless mouse.',
+      price: 129.99,
+      quantity: 24,
+    });
+    expect(
+      await screen.findByText('Product updated successfully.'),
+    ).toBeInTheDocument();
+
     await user.click(
       screen.getByRole('button', { name: 'Delete Wireless Mouse' }),
     );
 
-    expect(onEditProduct).toHaveBeenCalledWith(firstPage.items[0]);
     expect(onDeleteProduct).toHaveBeenCalledWith(firstPage.items[0]);
   });
 

@@ -37,4 +37,21 @@ const createProduct = async (token: string, product: ProductInput) => {
   return response.item;
 };
 
-export { createProduct, getProducts };
+const updateProduct = async (
+  token: string,
+  productId: string,
+  product: ProductInput,
+) => {
+  const response = await apiRequest<ProductResponse>(
+    `/api/products/${encodeURIComponent(productId)}`,
+    {
+      method: 'PUT',
+      token,
+      body: JSON.stringify(product),
+    },
+  );
+
+  return response.item;
+};
+
+export { createProduct, getProducts, updateProduct };

@@ -12,9 +12,12 @@ import './ProductsPage.css';
 type ProductsPageProps = {
   canManage?: boolean;
   isLoggingOut?: boolean;
-  onEditProduct?: (product: Product) => void;
   onDeleteProduct?: (product: Product) => void;
   onCreateProduct?: (product: ProductInput) => Promise<void>;
+  onUpdateProduct?: (
+    productId: string,
+    product: ProductInput,
+  ) => Promise<void>;
   onLogout?: () => void;
 };
 
@@ -52,14 +55,15 @@ const getErrorMessage = (error: unknown) => {
 function ProductsPage({
   canManage = false,
   isLoggingOut = false,
-  onEditProduct,
   onDeleteProduct,
   onCreateProduct,
+  onUpdateProduct,
   onLogout,
 }: ProductsPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedPage = getPageNumber(searchParams.get('page'));
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loadState, setLoadState] = useState<ProductsLoadState>({
     page: null,
     attempt: 0,
@@ -163,6 +167,15 @@ function ProductsPage({
     setLoadAttempt((currentAttempt) => currentAttempt + 1);
   };
 
+  const handleUpdateProduct = async (product: ProductInput) => {
+    if (!editingProduct || !onUpdateProduct) {
+      return;
+    }
+
+    await onUpdateProduct(editingProduct.id, product);
+    setLoadAttempt((currentAttempt) => currentAttempt + 1);
+  };
+
   const productCountLabel = isLoading
     ? 'Loading...'
     : errorMessage
@@ -189,9 +202,16 @@ function ProductsPage({
           <span>{productCountLabel}</span>
         </header>
 
-        {canManage && onCreateProduct && (
-          <ProductForm onSubmit={handleCreateProduct} />
-        )}
+        {canManage && editingProduct && onUpdateProduct ? (
+          <ProductForm
+            key={editingProduct.id}
+            initialProduct={editingProduct}
+            onSubmit={handleUpdateProduct}
+            onCancel={() => setEditingProduct(null)}
+          />
+        ) : canManage && onCreateProduct ? (
+          <ProductForm key="create-product" onSubmit={handleCreateProduct} />
+        ) : null}
 
         {isLoading ? (
           <div className="products-page__state">
@@ -245,8 +265,8 @@ function ProductsPage({
                           <div className="products-page__actions">
                             <button
                               type="button"
-                              disabled={!onEditProduct}
-                              onClick={() => onEditProduct?.(product)}
+                              disabled={!onUpdateProduct}
+                              onClick={() => setEditingProduct(product)}
                               aria-label={`Edit ${product.name}`}
                             >
                               Edit

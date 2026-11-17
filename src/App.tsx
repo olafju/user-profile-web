@@ -5,7 +5,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ApiError from './api/ApiError';
 import { login, logout, register } from './api/authApi';
 import { deleteAccount, getProfile, updateProfile } from './api/profileApi';
-import { createProduct } from './api/productApi';
+import { createProduct, updateProduct } from './api/productApi';
 import Button from './components/atoms/Button/Button';
 import Message from './components/atoms/Message/Message';
 import Spinner from './components/atoms/Spinner/Spinner';
@@ -139,6 +139,18 @@ function App() {
     }
   };
 
+  const handleUpdateProduct = async (
+    productId: string,
+    product: ProductInput,
+  ) => {
+    try {
+      await updateProduct(getSessionToken(), productId, product);
+    } catch (error: unknown) {
+      handleAuthenticatedError(error);
+      throw error;
+    }
+  };
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -201,6 +213,7 @@ function App() {
             canManage={role === 'admin'}
             isLoggingOut={isLoggingOut}
             onCreateProduct={role === 'admin' ? handleCreateProduct : undefined}
+            onUpdateProduct={role === 'admin' ? handleUpdateProduct : undefined}
             onLogout={isAuthenticated ? handleLogout : undefined}
           />
         }

@@ -40,4 +40,43 @@ describe('ProductForm', () => {
       await screen.findByText('Product created successfully.'),
     ).toBeInTheDocument();
   });
+
+  it('edits an existing product and supports cancelling', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onCancel = vi.fn();
+
+    render(
+      <ProductForm
+        initialProduct={{
+          id: 'product-1',
+          name: 'Coffee',
+          description: 'Arabica beans',
+          price: 49.99,
+          quantity: 12,
+          addedAt: '2026-11-17T09:30:00Z',
+        }}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />,
+    );
+
+    expect(screen.getByLabelText('Name')).toHaveValue('Coffee');
+    await user.clear(screen.getByLabelText('Price'));
+    await user.type(screen.getByLabelText('Price'), '44.50');
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      name: 'Coffee',
+      description: 'Arabica beans',
+      price: 44.5,
+      quantity: 12,
+    });
+    expect(
+      await screen.findByText('Product updated successfully.'),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
 });

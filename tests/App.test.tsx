@@ -10,7 +10,11 @@ import {
   getProfile,
   updateProfile,
 } from '../src/api/profileApi';
-import { createProduct, getProducts } from '../src/api/productApi';
+import {
+  createProduct,
+  getProducts,
+  updateProduct,
+} from '../src/api/productApi';
 import SessionProvider from '../src/session/SessionProvider';
 import type { UserProfile } from '../src/types/profile';
 
@@ -29,6 +33,7 @@ vi.mock('../src/api/profileApi', () => ({
 vi.mock('../src/api/productApi', () => ({
   createProduct: vi.fn(),
   getProducts: vi.fn(),
+  updateProduct: vi.fn(),
 }));
 
 const profile: UserProfile = {
@@ -107,6 +112,14 @@ describe('App', () => {
       price: 49.99,
       quantity: 12,
       addedAt: '2026-11-17T10:00:00Z',
+    });
+    vi.mocked(updateProduct).mockResolvedValue({
+      id: 'product-1',
+      name: 'Updated Mouse',
+      description: 'Compact wireless mouse.',
+      price: 119.99,
+      quantity: 20,
+      addedAt: '2026-11-17T09:30:00Z',
     });
   });
 
