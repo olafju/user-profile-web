@@ -9,6 +9,25 @@ const isObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 };
 
+const getLegacyErrorFields = (
+  details: unknown[],
+): Record<string, string> | undefined => {
+  const fields: Record<string, string> = {};
+
+  details.forEach((detail) => {
+    if (
+      isObject(detail) &&
+      typeof detail.field === 'string' &&
+      detail.field &&
+      typeof detail.message === 'string'
+    ) {
+      fields[detail.field] = detail.message;
+    }
+  });
+
+  return Object.keys(fields).length > 0 ? fields : undefined;
+};
+
 
 const getRequestUrl = (path: string) => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -52,9 +71,15 @@ const getApiError = async (response: Response): Promise<ApiError> => {
       // Obsługa starszego formatu błędów
       if (Array.isArray(body.details)) {
         const firstDetail: unknown = body.details[0];
+        const fields = getLegacyErrorFields(body.details);
 
         if (isObject(firstDetail) && typeof firstDetail.message === "string") {
-          return new ApiError(firstDetail.message, response.status);
+          const message =
+            typeof body.error === 'string'
+              ? body.error
+              : firstDetail.message;
+
+          return new ApiError(message, response.status, null, fields);
         }
       }
 

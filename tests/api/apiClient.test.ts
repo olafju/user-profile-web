@@ -72,6 +72,34 @@ describe('apiRequest', () => {
   it('still supports the previous error response format', async () => {
     fetchMock.mockResolvedValue(
       new Response(
+        JSON.stringify({
+          error: 'Correct the highlighted fields.',
+          details: [
+            { field: 'name', message: 'Product name is already in use.' },
+            { field: 'price', message: 'Price is invalid.' },
+          ],
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      ),
+    );
+
+    await expect(apiRequest('/api/example')).rejects.toMatchObject({
+      name: 'ApiError',
+      message: 'Correct the highlighted fields.',
+      status: 400,
+      fields: {
+        name: 'Product name is already in use.',
+        price: 'Price is invalid.',
+      },
+    });
+  });
+
+  it('uses the first detail message when the previous format has no main error', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
         JSON.stringify({ details: [{ message: 'Invalid request.' }] }),
         {
           status: 400,

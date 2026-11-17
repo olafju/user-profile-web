@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import ApiError from '../../src/api/ApiError';
 import ProductForm from '../../src/components/organisms/ProductForm/ProductForm';
 
 describe('ProductForm', () => {
@@ -40,6 +41,40 @@ describe('ProductForm', () => {
     expect(screen.getByLabelText('Description')).toHaveValue('');
     expect(screen.getByLabelText('Price')).toHaveValue(null);
     expect(screen.getByLabelText('Quantity')).toHaveValue(null);
+  });
+
+  it('shows API validation errors under the correct fields', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockRejectedValue(
+      new ApiError('Correct the highlighted fields.', 400, null, {
+        name: 'Product name is already in use.',
+        price: 'Price is invalid.',
+      }),
+    );
+
+    render(<ProductForm onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText('Name'), 'Coffee');
+    await user.type(screen.getByLabelText('Price'), '49.99');
+    await user.type(screen.getByLabelText('Quantity'), '12');
+    await user.click(screen.getByRole('button', { name: 'Add product' }));
+
+    expect(
+      screen.getByText('Product name is already in use.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Price is invalid.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Correct the highlighted fields.'),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toHaveValue('Coffee');
+    expect(screen.getByLabelText('Price')).toHaveValue(49.99);
+
+    await user.type(screen.getByLabelText('Name'), ' beans');
+
+    expect(
+      screen.queryByText('Product name is already in use.'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText('Price is invalid.')).toBeInTheDocument();
   });
 
   it('edits an existing product and supports cancelling', async () => {

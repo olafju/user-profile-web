@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import ApiError from '../../../api/ApiError';
 import type { Product, ProductInput } from '../../../types/product';
 import Button from '../../atoms/Button/Button';
 import Message from '../../atoms/Message/Message';
@@ -15,6 +16,19 @@ type ProductFormProps = {
 };
 
 type ProductFormErrors = Partial<Record<keyof ProductInput, string>>;
+
+const getProductFieldErrors = (error: unknown): ProductFormErrors => {
+  if (!(error instanceof ApiError) || !error.fields) {
+    return {};
+  }
+
+  return {
+    name: error.fields.name,
+    description: error.fields.description,
+    price: error.fields.price,
+    quantity: error.fields.quantity,
+  };
+};
 
 const validateProduct = (
   name: string,
@@ -113,6 +127,7 @@ function ProductForm({
       setPrice('');
       setQuantity('');
     } catch (error: unknown) {
+      setFieldErrors(getProductFieldErrors(error));
       setSubmitError(
         error instanceof Error && error.message
           ? error.message
