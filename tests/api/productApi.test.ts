@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import apiRequest from '../../src/api/apiClient';
-import { getProducts } from '../../src/api/productApi';
+import { createProduct, getProducts } from '../../src/api/productApi';
 
 vi.mock('../../src/api/apiClient', () => ({
   default: vi.fn(),
@@ -29,6 +29,31 @@ describe('productApi', () => {
 
     expect(apiRequest).toHaveBeenCalledWith('/api/products?page=2&limit=10', {
       signal: controller.signal,
+    });
+  });
+
+  it('creates a product with the administrator token', async () => {
+    const product = {
+      name: 'Coffee',
+      description: 'Arabica beans',
+      price: 49.99,
+      quantity: 12,
+    };
+    const createdProduct = {
+      id: '1',
+      ...product,
+      addedAt: '2026-11-17T09:30:00Z',
+    };
+
+    vi.mocked(apiRequest).mockResolvedValue({ item: createdProduct });
+
+    await expect(createProduct('admin-token', product)).resolves.toEqual(
+      createdProduct,
+    );
+    expect(apiRequest).toHaveBeenCalledWith('/api/products', {
+      method: 'POST',
+      token: 'admin-token',
+      body: JSON.stringify(product),
     });
   });
 });

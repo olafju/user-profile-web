@@ -10,7 +10,7 @@ import {
   getProfile,
   updateProfile,
 } from '../src/api/profileApi';
-import { getProducts } from '../src/api/productApi';
+import { createProduct, getProducts } from '../src/api/productApi';
 import SessionProvider from '../src/session/SessionProvider';
 import type { UserProfile } from '../src/types/profile';
 
@@ -27,6 +27,7 @@ vi.mock('../src/api/profileApi', () => ({
 }));
 
 vi.mock('../src/api/productApi', () => ({
+  createProduct: vi.fn(),
   getProducts: vi.fn(),
 }));
 
@@ -35,6 +36,15 @@ const profile: UserProfile = {
   email: 'olaf@example.com',
   displayName: 'Olaf',
   bio: 'Frontend developer',
+};
+
+const createToken = (role: 'user' | 'admin') => {
+  const payload = btoa(JSON.stringify({ role }))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  return `header.${payload}.signature`;
 };
 
 const renderApp = (initialPath = '/login') => {
@@ -90,6 +100,14 @@ describe('App', () => {
       limit: 10,
       total: 1,
     });
+    vi.mocked(createProduct).mockResolvedValue({
+      id: 'product-2',
+      name: 'Coffee',
+      description: 'Arabica beans',
+      price: 49.99,
+      quantity: 12,
+      addedAt: '2026-11-17T10:00:00Z',
+    });
   });
 
   it('redirects a visitor without a session to the login page', async () => {
@@ -108,8 +126,42 @@ describe('App', () => {
     ).toBeInTheDocument();
     expect(await screen.findByText('Wireless Mouse')).toBeInTheDocument();
     expect(
+      screen.queryByRole('button', { name: 'Add product' }),
+    ).not.toBeInTheDocument();
+    expect(
       screen.queryByRole('button', { name: 'Log out' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('lets an administrator create a product', async () => {
+    const adminToken = createToken('admin');
+    vi.mocked(login).mockResolvedValue({
+      token: adminToken,
+      expiresAt: '2026-11-17T12:00:00.000Z',
+      user: profile,
+    });
+
+    renderApp();
+    const user = await submitLogin();
+    await user.click(
+      await screen.findByRole('link', { name: 'Products' }),
+    );
+
+    await user.type(screen.getByLabelText('Name'), 'Coffee');
+    await user.type(screen.getByLabelText('Description'), 'Arabica beans');
+    await user.type(screen.getByLabelText('Price'), '49.99');
+    await user.type(screen.getByLabelText('Quantity'), '12');
+    await user.click(screen.getByRole('button', { name: 'Add product' }));
+
+    expect(createProduct).toHaveBeenCalledWith(adminToken, {
+      name: 'Coffee',
+      description: 'Arabica beans',
+      price: 49.99,
+      quantity: 12,
+    });
+    expect(
+      await screen.findByText('Product created successfully.'),
+    ).toBeInTheDocument();
   });
 
   it('logs in, displays the profile and stores the token', async () => {

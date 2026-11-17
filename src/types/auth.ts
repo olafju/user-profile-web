@@ -1,5 +1,7 @@
 import type { UserProfile } from './profile';
 
+export type UserRole = 'user' | 'admin';
+
 export type LoginCredentials = {
   email: string;
   password: string;

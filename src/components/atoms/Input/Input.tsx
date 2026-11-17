@@ -8,6 +8,10 @@ type InputProps = {
   placeholder?: string;
   disabled?: boolean;
   autoComplete?: string;
+  min?: number;
+  max?: number;
+  step?: number | string;
+  maxLength?: number;
   ariaDescribedBy?: string;
   invalid?: boolean;
   onChange: (value: string) => void;
@@ -20,6 +24,10 @@ function Input({
   placeholder,
   disabled,
   autoComplete,
+  min,
+  max,
+  step,
+  maxLength,
   ariaDescribedBy,
   invalid,
   onChange,
@@ -37,6 +45,10 @@ function Input({
       placeholder={placeholder}
       disabled={disabled}
       autoComplete={autoComplete}
+      min={min}
+      max={max}
+      step={step}
+      maxLength={maxLength}
       aria-describedby={ariaDescribedBy}
       aria-invalid={invalid}
       onChange={handleChange}

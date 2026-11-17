@@ -7,6 +7,7 @@ type TextareaProps = {
   placeholder?: string;
   disabled?: boolean;
   rows?: number;
+  maxLength?: number;
   ariaDescribedBy?: string;
   invalid?: boolean;
   onChange: (value: string) => void;
@@ -18,6 +19,7 @@ function Textarea({
   placeholder,
   disabled,
   rows = 5,
+  maxLength,
   ariaDescribedBy,
   invalid,
   onChange,
@@ -34,6 +36,7 @@ function Textarea({
       placeholder={placeholder}
       disabled={disabled}
       rows={rows}
+      maxLength={maxLength}
       aria-describedby={ariaDescribedBy}
       aria-invalid={invalid}
       onChange={handleChange}

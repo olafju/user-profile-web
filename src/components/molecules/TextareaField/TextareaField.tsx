@@ -10,6 +10,7 @@ type TextareaFieldProps = {
   placeholder?: string;
   disabled?: boolean;
   rows?: number;
+  maxLength?: number;
   error?: string;
   onChange: (value: string) => void;
 };
@@ -21,6 +22,7 @@ function TextareaField({
   placeholder,
   disabled,
   rows,
+  maxLength,
   error,
   onChange,
 }: TextareaFieldProps) {
@@ -35,6 +37,7 @@ function TextareaField({
         placeholder={placeholder}
         disabled={disabled}
         rows={rows}
+        maxLength={maxLength}
         ariaDescribedBy={error ? errorId : undefined}
         invalid={Boolean(error)}
         onChange={onChange}

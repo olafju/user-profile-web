@@ -11,6 +11,10 @@ type FormFieldProps = {
   placeholder?: string;
   disabled?: boolean;
   autoComplete?: string;
+  min?: number;
+  max?: number;
+  step?: number | string;
+  maxLength?: number;
   error?: string;
   onChange: (value: string) => void;
 };
@@ -23,6 +27,10 @@ function FormField({
   placeholder,
   disabled,
   autoComplete,
+  min,
+  max,
+  step,
+  maxLength,
   error,
   onChange,
 }: FormFieldProps) {
@@ -38,6 +46,10 @@ function FormField({
         placeholder={placeholder}
         disabled={disabled}
         autoComplete={autoComplete}
+        min={min}
+        max={max}
+        step={step}
+        maxLength={maxLength}
         ariaDescribedBy={error ? errorId : undefined}
         invalid={Boolean(error)}
         onChange={onChange}

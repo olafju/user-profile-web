@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import getTokenRole from './getTokenRole';
 import SessionContext from './sessionContext';
 
 const SESSION_TOKEN_KEY = 'user-profile-token';
@@ -12,6 +13,7 @@ type SessionProviderProps = {
 
 function SessionProvider({ children }: SessionProviderProps) {
   const [token, setToken] = useState<string | null>(getStoredToken);
+  const role = token ? getTokenRole(token) : null;
 
   useEffect(() => {
     const syncToken = () => {
@@ -49,6 +51,7 @@ function SessionProvider({ children }: SessionProviderProps) {
     <SessionContext.Provider
       value={{
         token,
+        role,
         isAuthenticated: token !== null,
         startSession,
         endSession,

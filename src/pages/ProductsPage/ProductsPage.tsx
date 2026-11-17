@@ -4,8 +4,9 @@ import { getProducts } from '../../api/productApi';
 import Button from '../../components/atoms/Button/Button';
 import Message from '../../components/atoms/Message/Message';
 import Spinner from '../../components/atoms/Spinner/Spinner';
+import ProductForm from '../../components/organisms/ProductForm/ProductForm';
 import AppShell from '../../components/templates/AppShell/AppShell';
-import type { Product } from '../../types/product';
+import type { Product, ProductInput } from '../../types/product';
 import './ProductsPage.css';
 
 type ProductsPageProps = {
@@ -13,6 +14,7 @@ type ProductsPageProps = {
   isLoggingOut?: boolean;
   onEditProduct?: (product: Product) => void;
   onDeleteProduct?: (product: Product) => void;
+  onCreateProduct?: (product: ProductInput) => Promise<void>;
   onLogout?: () => void;
 };
 
@@ -52,6 +54,7 @@ function ProductsPage({
   isLoggingOut = false,
   onEditProduct,
   onDeleteProduct,
+  onCreateProduct,
   onLogout,
 }: ProductsPageProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -151,6 +154,15 @@ function ProductsPage({
     setLoadAttempt((currentAttempt) => currentAttempt + 1);
   };
 
+  const handleCreateProduct = async (product: ProductInput) => {
+    if (!onCreateProduct) {
+      return;
+    }
+
+    await onCreateProduct(product);
+    setLoadAttempt((currentAttempt) => currentAttempt + 1);
+  };
+
   const productCountLabel = isLoading
     ? 'Loading...'
     : errorMessage
@@ -176,6 +188,10 @@ function ProductsPage({
           </div>
           <span>{productCountLabel}</span>
         </header>
+
+        {canManage && onCreateProduct && (
+          <ProductForm onSubmit={handleCreateProduct} />
+        )}
 
         {isLoading ? (
           <div className="products-page__state">

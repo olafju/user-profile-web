@@ -5,6 +5,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ApiError from './api/ApiError';
 import { login, logout, register } from './api/authApi';
 import { deleteAccount, getProfile, updateProfile } from './api/profileApi';
+import { createProduct } from './api/productApi';
 import Button from './components/atoms/Button/Button';
 import Message from './components/atoms/Message/Message';
 import Spinner from './components/atoms/Spinner/Spinner';
@@ -18,9 +19,10 @@ import RegisterPage from './pages/RegisterPage/RegisterPage';
 import ProtectedRoute from './routing/ProtectedRoute';
 import PublicOnlyRoute from './routing/PublicOnlyRoute';
 import useSession from './session/useSession';
+import type { ProductInput } from './types/product';
 
 function App() {
-  const { token, isAuthenticated, startSession, endSession } = useSession();
+  const { token, role, isAuthenticated, startSession, endSession } = useSession();
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(
     null,
   );
@@ -128,6 +130,15 @@ function App() {
     endSession();
   };
 
+  const handleCreateProduct = async (product: ProductInput) => {
+    try {
+      await createProduct(getSessionToken(), product);
+    } catch (error: unknown) {
+      handleAuthenticatedError(error);
+      throw error;
+    }
+  };
+
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
@@ -187,7 +198,9 @@ function App() {
         path="/products"
         element={
           <ProductsPage
+            canManage={role === 'admin'}
             isLoggingOut={isLoggingOut}
+            onCreateProduct={role === 'admin' ? handleCreateProduct : undefined}
             onLogout={isAuthenticated ? handleLogout : undefined}
           />
         }
