@@ -10,6 +10,7 @@ import {
   getProfile,
   updateProfile,
 } from '../src/api/profileApi';
+import { getProducts } from '../src/api/productApi';
 import SessionProvider from '../src/session/SessionProvider';
 import type { UserProfile } from '../src/types/profile';
 
@@ -23,6 +24,10 @@ vi.mock('../src/api/profileApi', () => ({
   deleteAccount: vi.fn(),
   getProfile: vi.fn(),
   updateProfile: vi.fn(),
+}));
+
+vi.mock('../src/api/productApi', () => ({
+  getProducts: vi.fn(),
 }));
 
 const profile: UserProfile = {
@@ -70,6 +75,21 @@ describe('App', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     localStorage.clear();
+    vi.mocked(getProducts).mockResolvedValue({
+      items: [
+        {
+          id: 'product-1',
+          name: 'Wireless Mouse',
+          description: 'Compact wireless mouse.',
+          price: 129.99,
+          quantity: 24,
+          addedAt: '2026-11-17T09:30:00Z',
+        },
+      ],
+      page: 1,
+      limit: 10,
+      total: 1,
+    });
   });
 
   it('redirects a visitor without a session to the login page', async () => {
@@ -78,6 +98,18 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { name: 'Welcome back' }),
     ).toBeInTheDocument();
+  });
+
+  it('shows the public product catalogue without a session', async () => {
+    renderApp('/products');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Products' }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('Wireless Mouse')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Log out' }),
+    ).not.toBeInTheDocument();
   });
 
   it('logs in, displays the profile and stores the token', async () => {
@@ -190,7 +222,7 @@ describe('App', () => {
     expect(
       await screen.findByRole('heading', { name: 'Products' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Wireless Mouse')).toBeInTheDocument();
+    expect(await screen.findByText('Wireless Mouse')).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Bar 2' }));
 

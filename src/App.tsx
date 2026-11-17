@@ -186,12 +186,10 @@ function App() {
       <Route
         path="/products"
         element={
-          <ProtectedRoute>
-            <ProductsPage
-              isLoggingOut={isLoggingOut}
-              onLogout={handleLogout}
-            />
-          </ProtectedRoute>
+          <ProductsPage
+            isLoggingOut={isLoggingOut}
+            onLogout={isAuthenticated ? handleLogout : undefined}
+          />
         }
       />
       <Route

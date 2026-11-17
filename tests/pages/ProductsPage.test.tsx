@@ -1,32 +1,61 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getProducts } from '../../src/api/productApi';
 import ProductsPage from '../../src/pages/ProductsPage/ProductsPage';
-import type { Product } from '../../src/types/product';
+import type { ProductListResponse } from '../../src/types/product';
+
+vi.mock('../../src/api/productApi', () => ({
+  getProducts: vi.fn(),
+}));
+
+const firstPage: ProductListResponse = {
+  items: [
+    {
+      id: 'product-1',
+      name: 'Wireless Mouse',
+      description: 'Compact wireless mouse.',
+      price: 129.99,
+      quantity: 24,
+      addedAt: '2026-11-17T09:30:00Z',
+    },
+  ],
+  page: 1,
+  limit: 10,
+  total: 12,
+};
+
+const secondPage: ProductListResponse = {
+  items: [
+    {
+      id: 'product-11',
+      name: 'Cable Organizer',
+      description: 'Reusable cable clips.',
+      price: 39.99,
+      quantity: 52,
+      addedAt: '2026-11-16T10:00:00Z',
+    },
+  ],
+  page: 2,
+  limit: 10,
+  total: 12,
+};
 
 const renderProductsPage = (
   options: {
     canManage?: boolean;
-    errorMessage?: string;
     initialPath?: string;
-    isLoading?: boolean;
-    products?: Product[];
-    onEditProduct?: (product: Product) => void;
-    onDeleteProduct?: (product: Product) => void;
-    onRetry?: () => void;
+    onEditProduct?: () => void;
+    onDeleteProduct?: () => void;
   } = {},
 ) => {
   render(
     <MemoryRouter initialEntries={[options.initialPath ?? '/products']}>
       <ProductsPage
         canManage={options.canManage}
-        errorMessage={options.errorMessage}
-        isLoading={options.isLoading}
-        products={options.products}
         onEditProduct={options.onEditProduct}
         onDeleteProduct={options.onDeleteProduct}
-        onRetry={options.onRetry}
         onLogout={vi.fn()}
       />
       <LocationSearch />
@@ -41,10 +70,34 @@ function LocationSearch() {
 }
 
 describe('ProductsPage', () => {
-  it('does not show management actions to a regular user', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(getProducts).mockImplementation(({ page }) => {
+      return Promise.resolve(page === 2 ? secondPage : firstPage);
+    });
+  });
+
+  it('loads the first product page from the API', async () => {
     renderProductsPage();
 
-    expect(screen.getByText('Wireless Mouse')).toBeInTheDocument();
+    expect(
+      screen.getByRole('status', { name: 'Loading products' }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('Wireless Mouse')).toBeInTheDocument();
+    expect(screen.getByText('12 products')).toBeInTheDocument();
+    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+    expect(getProducts).toHaveBeenCalledWith({
+      page: 1,
+      limit: 10,
+      signal: expect.any(AbortSignal),
+    });
+  });
+
+  it('does not show management actions to a regular user', async () => {
+    renderProductsPage();
+
+    await screen.findByText('Wireless Mouse');
+
     expect(
       screen.queryByRole('button', { name: 'Edit Wireless Mouse' }),
     ).not.toBeInTheDocument();
@@ -53,7 +106,7 @@ describe('ProductsPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows working management actions to an admin', async () => {
+  it('shows working management actions when management is enabled', async () => {
     const user = userEvent.setup();
     const onEditProduct = vi.fn();
     const onDeleteProduct = vi.fn();
@@ -65,169 +118,80 @@ describe('ProductsPage', () => {
     });
 
     await user.click(
-      screen.getByRole('button', { name: 'Edit Wireless Mouse' }),
+      await screen.findByRole('button', { name: 'Edit Wireless Mouse' }),
     );
     await user.click(
       screen.getByRole('button', { name: 'Delete Wireless Mouse' }),
     );
 
-    expect(onEditProduct).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'product-1' }),
-    );
-    expect(onDeleteProduct).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'product-1' }),
-    );
+    expect(onEditProduct).toHaveBeenCalledWith(firstPage.items[0]);
+    expect(onDeleteProduct).toHaveBeenCalledWith(firstPage.items[0]);
   });
 
-  it('restores product search from the URL', () => {
-    renderProductsPage({ initialPath: '/products?q=mouse' });
-
-    expect(screen.getByRole('searchbox', { name: 'Search products' })).toHaveValue(
-      'mouse',
-    );
-    expect(screen.getByText('Wireless Mouse')).toBeInTheDocument();
-    expect(screen.queryByText('Mechanical Keyboard')).not.toBeInTheDocument();
-  });
-
-  it('updates the URL and product list after the search delay', async () => {
-    const user = userEvent.setup();
-
-    renderProductsPage();
-
-    await user.type(
-      screen.getByRole('searchbox', { name: 'Search products' }),
-      'hub',
-    );
-
-    expect(screen.getByText('Wireless Mouse')).toBeInTheDocument();
-
-    await waitFor(() => {
-      expect(screen.getByTestId('location-search')).toHaveTextContent('?q=hub');
-    });
-
-    expect(screen.getByText('USB-C Hub')).toBeInTheDocument();
-    expect(screen.queryByText('Wireless Mouse')).not.toBeInTheDocument();
-  });
-
-  it('restores product sorting from the URL', () => {
-    renderProductsPage({ initialPath: '/products?sort=price' });
-
-    expect(screen.getByRole('combobox', { name: 'Sort products' })).toHaveValue(
-      'price',
-    );
-
-    const productRows = screen.getAllByRole('row').slice(1);
-
-    expect(productRows).toHaveLength(10);
-    expect(
-      within(productRows[0]).getByText('Cable Organizer'),
-    ).toBeInTheDocument();
-    expect(
-      within(productRows[productRows.length - 1]).getByText(
-        'Mechanical Keyboard',
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText('Portable SSD')).not.toBeInTheDocument();
-  });
-
-  it('updates product sorting without removing the search query', async () => {
-    const user = userEvent.setup();
-
-    renderProductsPage({ initialPath: '/products?q=mouse' });
-
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Sort products' }),
-      '-price',
-    );
-
-    expect(screen.getByTestId('location-search')).toHaveTextContent('q=mouse');
-    expect(screen.getByTestId('location-search')).toHaveTextContent(
-      'sort=-price',
-    );
-  });
-
-  it('changes pages and stores the selected page in the URL', async () => {
-    const user = userEvent.setup();
-
-    renderProductsPage();
-
-    expect(screen.getByText('12 products')).toBeInTheDocument();
-    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
-    expect(screen.getAllByRole('row').slice(1)).toHaveLength(10);
-    expect(screen.queryByText('Cable Organizer')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Next' }));
-
-    expect(screen.getByTestId('location-search')).toHaveTextContent('page=2');
-    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-    expect(screen.getAllByRole('row').slice(1)).toHaveLength(2);
-    expect(screen.getByText('Desk Mat')).toBeInTheDocument();
-    expect(screen.getByText('Cable Organizer')).toBeInTheDocument();
-    expect(screen.queryByText('Wireless Mouse')).not.toBeInTheDocument();
-  });
-
-  it('resets pagination after changing the sort order', async () => {
-    const user = userEvent.setup();
-
+  it('loads the page stored in the URL', async () => {
     renderProductsPage({ initialPath: '/products?page=2' });
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Sort products' }),
-      'price',
-    );
-
-    expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
-    expect(screen.getByTestId('location-search')).not.toHaveTextContent(
-      'page=',
-    );
-    expect(screen.getByText('Wireless Mouse')).toBeInTheDocument();
+    expect(await screen.findByText('Cable Organizer')).toBeInTheDocument();
+    expect(getProducts).toHaveBeenCalledWith({
+      page: 2,
+      limit: 10,
+      signal: expect.any(AbortSignal),
+    });
+    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
   });
 
-  it('normalizes a page number outside the available range', async () => {
+  it('changes the page and stores it in the URL', async () => {
+    const user = userEvent.setup();
+
+    renderProductsPage();
+
+    await screen.findByText('Wireless Mouse');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByText('Cable Organizer')).toBeInTheDocument();
+    expect(screen.getByTestId('location-search')).toHaveTextContent('page=2');
+    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+  });
+
+  it('normalizes a page outside the available range', async () => {
     renderProductsPage({ initialPath: '/products?page=99' });
 
     await waitFor(() => {
       expect(screen.getByTestId('location-search')).toHaveTextContent('page=2');
     });
-
-    expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-    expect(screen.getByText('Desk Mat')).toBeInTheDocument();
+    expect(await screen.findByText('Cable Organizer')).toBeInTheDocument();
   });
 
-  it('shows a loading state without the product table', () => {
-    renderProductsPage({ isLoading: true });
+  it('shows an error and retries the request', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getProducts)
+      .mockRejectedValueOnce(new Error('Unable to load products.'))
+      .mockResolvedValueOnce(firstPage);
+
+    renderProductsPage();
 
     expect(
-      screen.getByRole('status', { name: 'Loading products' }),
+      await screen.findByText('Unable to load products.'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Loading products...')).toBeInTheDocument();
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
-  });
-
-  it('shows an error state with a retry action', async () => {
-    const user = userEvent.setup();
-    const onRetry = vi.fn();
-
-    renderProductsPage({
-      errorMessage: 'Unable to load products.',
-      onRetry,
-    });
-
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Unable to load products.',
-    );
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Try again' }));
 
-    expect(onRetry).toHaveBeenCalledOnce();
+    expect(await screen.findByText('Wireless Mouse')).toBeInTheDocument();
+    expect(getProducts).toHaveBeenCalledTimes(2);
   });
 
-  it('shows an empty state without pagination', () => {
-    renderProductsPage({ products: [] });
+  it('shows an empty state without pagination', async () => {
+    vi.mocked(getProducts).mockResolvedValue({
+      items: [],
+      page: 1,
+      limit: 10,
+      total: 0,
+    });
 
+    renderProductsPage();
+
+    expect(await screen.findByText('No products available.')).toBeInTheDocument();
     expect(screen.getByText('0 products')).toBeInTheDocument();
-    expect(screen.getByText('No products available.')).toBeInTheDocument();
     expect(
       screen.queryByRole('navigation', { name: 'Product pages' }),
     ).not.toBeInTheDocument();

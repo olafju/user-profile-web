@@ -3,7 +3,13 @@ export type Product = {
   name: string;
   description: string;
   price: number;
-  stock: number;
-  version: number;
-  createdAt: string;
+  quantity: number;
+  addedAt: string;
+};
+
+export type ProductListResponse = {
+  items: Product[];
+  page: number;
+  limit: number;
+  total: number;
 };

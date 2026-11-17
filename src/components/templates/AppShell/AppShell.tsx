@@ -9,7 +9,7 @@ type AppShellProps = {
   description?: string;
   children: ReactNode;
   isLoggingOut?: boolean;
-  onLogout: () => void;
+  onLogout?: () => void;
 };
 
 function DashboardIcon() {
@@ -149,14 +149,16 @@ function AppShell({
               <ProfileIcon />
             </NavLink>
 
-            <Button
-              variant="secondary"
-              disabled={isLoggingOut}
-              onClick={onLogout}
-            >
-              {isLoggingOut && <Spinner label="Logging out" />}
-              {isLoggingOut ? 'Logging out...' : 'Log out'}
-            </Button>
+            {onLogout && (
+              <Button
+                variant="secondary"
+                disabled={isLoggingOut}
+                onClick={onLogout}
+              >
+                {isLoggingOut && <Spinner label="Logging out" />}
+                {isLoggingOut ? 'Logging out...' : 'Log out'}
+              </Button>
+            )}
           </div>
         </header>
 
